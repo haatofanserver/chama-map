@@ -6,14 +6,14 @@ This implementation plan breaks down the Return to Japan button feature into dis
 
 ## Tasks
 
-- [ ] 1. Create ReturnToJapanButton component and types
+- [x] 1. Create ReturnToJapanButton component and types
   - Create `src/components/map/ReturnToJapanButton.tsx` following GPSControlButton pattern
   - Define TypeScript interfaces for props and configuration
   - Implement custom Leaflet control with React integration
   - Add house icon using React Icons (FaHome)
   - _Requirements: 1.1, 1.2, 1.3, 1.4_
 
-- [ ]* 1.1 Write property tests for ReturnToJapanButton component
+- [x] 1.1 Write property tests for ReturnToJapanButton component
   - **Property 1: Button visibility across map states**
   - **Property 7: Icon consistency across languages**
   - **Property 8: Responsive behavior**

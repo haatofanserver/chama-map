@@ -50,3 +50,18 @@ export const DEFAULT_GEOLOCATION_OPTIONS: GeolocationOptions = {
   backgroundUpdateInterval: 30000, // 30 seconds when in background
   mobileOptimized: true
 };
+// Return to Japan button types
+export interface JapanViewConfig {
+  center: [number, number]; // [lat, lng]
+  zoom: number;
+  animationOptions: {
+    duration: number; // seconds
+    easeLinearity: number;
+  };
+}
+
+export interface FlyToOptions {
+  duration: number; // seconds for optimal UX
+  easeLinearity: number; // for smooth deceleration
+  noMoveStart?: boolean; // false to trigger move events
+}
