@@ -1,5 +1,4 @@
 import { motion } from 'framer-motion';
-import Image from 'next/image';
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import styles from './SplashScreen.module.css';
@@ -10,6 +9,9 @@ const SplashScreen: React.FC = () => {
   const descriptionEN = t('meta.description', { lng: 'en' });
   const titleJP = t('meta.title', { lng: 'ja' });
   const descriptionJP = t('meta.description', { lng: 'ja' });
+
+  const basePath = import.meta.env.VITE_BASE_PATH || '';
+
   return (
     <motion.div
       initial={{ opacity: 1, scale: 1 }}
@@ -46,8 +48,8 @@ const SplashScreen: React.FC = () => {
           <p className="text-lg text-gray-200 mb-4">{descriptionEN}</p>
         </div>
         <div className={styles.container}>
-          <Image
-            src={process.env.NEXT_PUBLIC_BASE_PATH + 'chamapoint.png'}
+          <img
+            src={`${basePath}/chamapoint.png`}
             className="rounded-full"
             alt="Chama"
             width={200}

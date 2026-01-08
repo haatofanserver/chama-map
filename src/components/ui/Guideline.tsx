@@ -1,5 +1,3 @@
-'use client';
-
 import { useState, useEffect } from 'react';
 import useCookie from 'react-use-cookie';
 import { motion } from 'framer-motion';

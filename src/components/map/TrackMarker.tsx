@@ -45,13 +45,13 @@ const TrackMarker = forwardRef<TrackMarkerHandle, TrackMarkerProps>(({ icon, coo
 
   const markerIcon = icon
     ? new L.Icon({
-        iconUrl: icon,
-        // shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
-        iconSize: [28, 28],
-        iconAnchor: [14, 28],
-        popupAnchor: [0, -35],
-        shadowSize: [28, 28]
-      })
+      iconUrl: icon,
+      // shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
+      iconSize: [28, 28],
+      iconAnchor: [14, 28],
+      popupAnchor: [0, -35],
+      shadowSize: [28, 28]
+    })
     : defaultIcon;
 
   const markerRef = useRef<LeafletMarker>(null);
@@ -127,8 +127,8 @@ const TrackMarker = forwardRef<TrackMarkerHandle, TrackMarkerProps>(({ icon, coo
                   src={
                     displayImages[imgIndex].includes('youtube.com') || displayImages[imgIndex].includes('youtu.be') // ||
                       ? // displayImages[imgIndex].includes('fxtwitter.com')
-                        displayImages[imgIndex]
-                      : process.env.NEXT_PUBLIC_CORS_PROXY + displayImages[imgIndex]
+                      displayImages[imgIndex]
+                      : import.meta.env.VITE_CORS_PROXY + displayImages[imgIndex]
                   }
                   alt={displayTitle}
                   className={styles['gallery-image']}

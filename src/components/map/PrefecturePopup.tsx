@@ -1,4 +1,3 @@
-'use client';
 import React from 'react';
 import { Popup } from 'react-leaflet';
 import type { FeatureCollection, Point, MultiPolygon } from 'geojson';
@@ -41,8 +40,8 @@ const PrefecturePopup = ({
   // Deduplicated groups for the selected prefecture when groupedMap is provided
   const groupedList: Feature<Point, TrackProperties>[][] | null = groupedMap
     ? Object.values(groupedMap).filter(
-        (group) => group.length > 0 && group[0].properties.prefecture === selectedPrefecture
-      )
+      (group) => group.length > 0 && group[0].properties.prefecture === selectedPrefecture
+    )
     : null;
 
   return (

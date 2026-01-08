@@ -1,4 +1,3 @@
-'use client';
 import React, { useMemo, useState } from 'react';
 import { MapContainer, TileLayer, GeoJSON, ZoomControl } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
@@ -77,11 +76,11 @@ const JapanMap: React.FC<JapanMapProps> = ({ className, japanData, chamaTrack })
         style={{ height: '100%', width: '100%' }}
         className="rounded-lg shadow-lg"
         zoomControl={false}
-        // scrollWheelZoom={false}
-        // zoomSnap={1}
-        // /** @ts-expect-error smoothWheelZoom is not a valid prop */
-        // smoothWheelZoom={true}
-        // smoothSensitivity={1}
+      // scrollWheelZoom={false}
+      // zoomSnap={1}
+      // /** @ts-expect-error smoothWheelZoom is not a valid prop */
+      // smoothWheelZoom={true}
+      // smoothSensitivity={1}
       >
         <ZoomControl position="bottomright" />
         <MapEventHandler
@@ -99,7 +98,7 @@ const JapanMap: React.FC<JapanMapProps> = ({ className, japanData, chamaTrack })
           <TileLayer
             url="https://cyberjapandata.gsi.go.jp/xyz/pale/{z}/{x}/{y}.png"
             attribution='出典: <a href="https://maps.gsi.go.jp/development/ichiran.html" target="_blank" rel="noreferrer">国土地理院（地理院タイル）</a>'
-            // updateWhenZooming={false}
+          // updateWhenZooming={false}
           />
         )}
 

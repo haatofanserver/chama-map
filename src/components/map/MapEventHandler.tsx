@@ -1,4 +1,3 @@
-'use client';
 import { useEffect } from 'react';
 import { useMapEvents } from 'react-leaflet';
 import type { PopupEvent } from 'leaflet';
