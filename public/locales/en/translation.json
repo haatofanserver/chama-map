@@ -5,6 +5,11 @@
     "close": "Close",
     "open": "Open"
   },
+  "error": {
+    "componentError": "Component Error",
+    "unknownError": "An unknown error occurred",
+    "retry": "Retry"
+  },
   "map": {
     "title": "Akai Travel Map",
     "description": "Explore Haachama's journey across Japan",

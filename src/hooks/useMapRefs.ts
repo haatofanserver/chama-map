@@ -1,4 +1,5 @@
 import React, { useRef } from 'react';
+import L from 'leaflet';
 import type { TrackMarkerHandle } from '../components/map/TrackMarker';
 
 export const useMapRefs = () => {

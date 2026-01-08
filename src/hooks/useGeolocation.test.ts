@@ -34,7 +34,7 @@ describe('useGeolocation Property Tests', () => {
         (position) => {
           // Mock permission granted
           const mockPermissionResult = {
-            state: 'granted' as PermissionState,
+            state: 'granted' as globalThis.PermissionState,
             addEventListener: vi.fn(),
           };
           mockPermissions.query.mockResolvedValue(mockPermissionResult);
@@ -132,7 +132,7 @@ describe('useGeolocation Property Tests', () => {
         fc.boolean(), // App visibility state
         fc.boolean(), // User interaction state
         (isVisible, hasUserInteraction) => {
-          let capturedOptions: PositionOptions | undefined;
+          let capturedOptions: globalThis.PositionOptions | undefined;
           mockGeolocation.watchPosition.mockImplementation((_success, _error, options) => {
             capturedOptions = options;
             return 1; // mock watch id
@@ -226,7 +226,7 @@ describe('useGeolocation Property Tests', () => {
         fc.boolean(), // Mobile optimization enabled
         fc.boolean(), // User interaction state
         (mobileOptimized, hasUserInteraction) => {
-          let capturedOptions: PositionOptions | undefined;
+          let capturedOptions: globalThis.PositionOptions | undefined;
           mockGeolocation.watchPosition.mockImplementation((_success, _error, options) => {
             capturedOptions = options;
             return 1; // mock watch id

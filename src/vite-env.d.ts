@@ -1,4 +1,5 @@
 /// <reference types="vite/client" />
+/// <reference types="./globals" />
 
 interface ImportMetaEnv {
   readonly VITE_SITE_URL: string

@@ -1,8 +1,8 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useCallback } from 'react';
 import { useMap } from 'react-leaflet';
 import L from 'leaflet';
 import { FaLocationCrosshairs } from 'react-icons/fa6';
-import { createRoot } from 'react-dom/client';
+import { createRoot, type Root } from 'react-dom/client';
 import { useTranslation } from 'react-i18next';
 import type { UserGeolocationPosition } from '@/types/geolocation';
 
@@ -17,18 +17,18 @@ interface GPSControlButtonProps {
 // Custom Leaflet control for GPS button
 class GPSControl extends L.Control {
   private container: HTMLDivElement | null = null;
-  private root: any = null;
+  private root: Root | null = null;
   private onLocate: () => void;
   private isLoading: boolean;
   private isDisabled: boolean;
-  private t: any;
+  private t: (key: string, options?: unknown) => string;
 
   constructor(
     onLocate: () => void,
     isLoading: boolean,
     isDisabled: boolean,
     _position: UserGeolocationPosition | null,
-    t: any,
+    t: (key: string, options?: unknown) => string,
     options?: L.ControlOptions
   ) {
     super(options);
@@ -113,7 +113,7 @@ class GPSControl extends L.Control {
     isLoading: boolean,
     isDisabled: boolean,
     _position: UserGeolocationPosition | null,
-    t: any
+    t: (key: string, options?: unknown) => string
   ): void {
     this.onLocate = onLocate;
     this.isLoading = isLoading;
@@ -135,7 +135,7 @@ const GPSControlButton: React.FC<GPSControlButtonProps> = ({
   const controlRef = useRef<GPSControl | null>(null);
 
   // Handle GPS button click - center map on current position
-  const handleLocate = (): void => {
+  const handleLocate = useCallback((): void => {
     if (position) {
       // Center map on current position with smooth animation
       map.flyTo([position.lat, position.lng], Math.max(map.getZoom(), 15), {
@@ -146,7 +146,7 @@ const GPSControlButton: React.FC<GPSControlButtonProps> = ({
       // Request new location if no current position
       onLocate();
     }
-  };
+  }, [position, map, onLocate]);
 
   useEffect(() => {
     if (!map) return;
@@ -157,7 +157,7 @@ const GPSControlButton: React.FC<GPSControlButtonProps> = ({
       isLoading,
       isDisabled,
       position ?? null,
-      t,
+      t as (key: string, options?: unknown) => string,
       { position: controlPosition }
     );
 
@@ -170,14 +170,14 @@ const GPSControlButton: React.FC<GPSControlButtonProps> = ({
         controlRef.current = null;
       }
     };
-  }, [map, controlPosition]);
+  }, [map, controlPosition, handleLocate, isLoading, isDisabled, position, t]);
 
   // Update control state when props change
   useEffect(() => {
     if (controlRef.current) {
-      controlRef.current.updateState(handleLocate, isLoading, isDisabled, position ?? null, t);
+      controlRef.current.updateState(handleLocate, isLoading, isDisabled, position ?? null, t as (key: string, options?: unknown) => string);
     }
-  }, [isLoading, isDisabled, position, t]);
+  }, [handleLocate, isLoading, isDisabled, position, t]);
 
   // This component doesn't render anything directly - it manages the Leaflet control
   return null;

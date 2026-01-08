@@ -1,5 +1,6 @@
 import React from 'react';
 import { Popup } from 'react-leaflet';
+import L from 'leaflet';
 import type { FeatureCollection, Point, MultiPolygon } from 'geojson';
 import type { TrackMarkerHandle } from './TrackMarker';
 import { TrackProperties, PrefectureProperties } from '@/types/map';

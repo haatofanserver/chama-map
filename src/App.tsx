@@ -30,7 +30,7 @@ function AppContent() {
   const [chamaTrack, setChamaTrack] = useState<FeatureCollection<Point, TrackProperties> | null>(null);
 
   useEffect(() => {
-    let splashTimeout: NodeJS.Timeout;
+    let splashTimeout: ReturnType<typeof setTimeout>;
     Promise.all([getJapanPrefectures(), getChamaTrack()]).then(([japan, track]) => {
       setJapanData(japan);
       setChamaTrack(track);

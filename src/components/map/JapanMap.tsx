@@ -17,9 +17,9 @@ import { getFeatureStyle } from '@/utils/mapStyles';
 import { createPrefectureHandlers } from '@/utils/mapPrefectureUtils';
 // import '@/lib/SmoothWheelZoom';
 import { groupMapByNameAndCoordinates } from '@/utils/groupTrackFeatures';
-import { useTranslation } from 'react-i18next';
+import ErrorBoundary from '@/components/ui/ErrorBoundary';
 
-// Fix for default markers in React Leaflet
+import { useTranslation } from 'react-i18next';
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 delete (L.Icon.Default.prototype as any)._getIconUrl;
 L.Icon.Default.mergeOptions({
@@ -77,36 +77,55 @@ const JapanMap: React.FC<JapanMapProps> = ({ className, japanData, chamaTrack })
     }
   };
 
-  // Handle Return to Japan button click
+  // Handle Return to Japan button click with improved animation interruption handling
   const handleReturnToJapan = () => {
     if (!isAnimatingToJapan && mapRef.current) {
       setIsAnimatingToJapan(true);
 
       // Set up event listeners to track animation completion
       const map = mapRef.current;
+      let animationCompleted = false;
+      let fallbackTimeout: ReturnType<typeof setTimeout>;
+
+      const completeAnimation = () => {
+        if (!animationCompleted) {
+          animationCompleted = true;
+          setIsAnimatingToJapan(false);
+          // Clean up all event listeners
+          map.off('moveend', onMoveEnd);
+          map.off('zoomend', onZoomEnd);
+          map.off('movestart', onMoveStart);
+          // Clear the fallback timeout
+          if (fallbackTimeout) {
+            clearTimeout(fallbackTimeout);
+          }
+        }
+      };
 
       const onMoveEnd = () => {
-        setIsAnimatingToJapan(false);
-        map.off('moveend', onMoveEnd);
-        map.off('zoomend', onZoomEnd);
+        completeAnimation();
       };
 
       const onZoomEnd = () => {
-        setIsAnimatingToJapan(false);
-        map.off('moveend', onMoveEnd);
-        map.off('zoomend', onZoomEnd);
+        completeAnimation();
       };
 
-      // Listen for animation completion
+      // Handle animation interruption gracefully
+      const onMoveStart = () => {
+        // If a new movement starts while we're animating, it might be user interruption
+        // We'll let the moveend event handle the completion
+      };
+
+      // Listen for animation completion and interruption
       map.on('moveend', onMoveEnd);
       map.on('zoomend', onZoomEnd);
+      map.on('movestart', onMoveStart);
 
       // Fallback timeout to ensure state is reset even if events don't fire
-      setTimeout(() => {
-        setIsAnimatingToJapan(false);
-        map.off('moveend', onMoveEnd);
-        map.off('zoomend', onZoomEnd);
-      }, 3000); // 3 seconds should be more than enough for any animation
+      // Use a longer timeout to account for slower mobile devices
+      fallbackTimeout = setTimeout(() => {
+        completeAnimation();
+      }, 5000); // 5 seconds should be more than enough for any animation
     }
   };
 
@@ -177,12 +196,23 @@ const JapanMap: React.FC<JapanMapProps> = ({ className, japanData, chamaTrack })
           controlPosition="bottomright"
         />
 
-        {/* Return to Japan Button */}
-        <ReturnToJapanButton
-          onReturnToJapan={handleReturnToJapan}
-          isAnimating={isAnimatingToJapan}
-          controlPosition="bottomright"
-        />
+        {/* Return to Japan Button with Error Boundary */}
+        <ErrorBoundary
+          fallback={
+            <div className="leaflet-control leaflet-bar leaflet-control-custom" style={{ position: 'absolute', bottom: '10px', right: '10px' }}>
+              <div className="w-8 h-8 bg-red-100 border border-red-300 rounded-sm flex items-center justify-center">
+                <span className="text-red-600 text-xs">⚠️</span>
+              </div>
+            </div>
+          }
+          onError={(error) => console.error('ReturnToJapanButton error:', error)}
+        >
+          <ReturnToJapanButton
+            onReturnToJapan={handleReturnToJapan}
+            isAnimating={isAnimatingToJapan}
+            controlPosition="bottomright"
+          />
+        </ErrorBoundary>
 
         <MapEventHandler
           onPopupClose={() => setSelectedPrefecture(null)}

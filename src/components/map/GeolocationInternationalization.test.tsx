@@ -1,3 +1,4 @@
+import React from 'react';
 import { describe, it, expect, beforeEach } from 'vitest';
 import { render } from '@testing-library/react';
 import { I18nextProvider } from 'react-i18next';

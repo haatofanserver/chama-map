@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import type {
   UserGeolocationPosition,
   GeolocationErrorType,
@@ -16,16 +16,16 @@ export const useGeolocation = (
   const [isPermissionGranted, setIsPermissionGranted] = useState(false);
 
   const watchIdRef = useRef<number | null>(null);
-  const inactivityTimerRef = useRef<NodeJS.Timeout | null>(null);
-  const backgroundTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const inactivityTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const backgroundTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const lastActivityRef = useRef<number>(Date.now());
   const isActiveRef = useRef(true);
   const isUserInteractingRef = useRef(false);
 
-  const mergedOptions: GeolocationOptions = {
+  const mergedOptions: GeolocationOptions = useMemo(() => ({
     ...DEFAULT_GEOLOCATION_OPTIONS,
     ...options
-  };
+  }), [options]);
 
   // Convert GeolocationError to our custom error type
   const convertGeolocationError = useCallback((geoError: GeolocationPositionError): GeolocationErrorType => {
@@ -81,11 +81,11 @@ export const useGeolocation = (
   }, [convertGeolocationError]);
 
   // Get current geolocation options based on app state
-  const getCurrentOptions = useCallback((): PositionOptions => {
+  const getCurrentOptions = useCallback((): globalThis.PositionOptions => {
     const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
     const shouldUseHighAccuracy = isActiveRef.current && (mergedOptions.mobileOptimized ? !isMobile || isUserInteractingRef.current : true);
 
-    const baseOptions: PositionOptions = {
+    const baseOptions: globalThis.PositionOptions = {
       enableHighAccuracy: shouldUseHighAccuracy,
       timeout: mergedOptions.timeout,
       maximumAge: isActiveRef.current ? mergedOptions.maximumAge : mergedOptions.maximumAge * 2

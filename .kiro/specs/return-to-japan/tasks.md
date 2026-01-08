@@ -76,46 +76,46 @@ This implementation plan breaks down the Return to Japan button feature into dis
 - [x] 6. Checkpoint - Ensure all tests pass
   - Ensure all tests pass, ask the user if questions arise.
 
-- [ ] 7. Add CSS styling and responsive design
+- [x] 7. Add CSS styling and responsive design
   - Create consistent styling with existing map controls
   - Ensure proper touch targets for mobile devices (minimum 44px)
   - Add responsive behavior for different screen sizes and orientations
   - Test accessibility color contrast requirements
   - _Requirements: 1.4, 4.5, 6.3, 7.2, 7.5_
 
-- [ ]* 7.1 Write unit tests for styling and accessibility
+- [x] 7.1 Write unit tests for styling and accessibility
   - Test CSS class application and consistency
   - Test minimum touch target size (44px)
   - Test color contrast compliance
   - **Validates: Requirements 1.4, 4.5, 6.3, 7.2**
 
-- [ ] 8. Performance optimization and error handling
+- [x] 8. Performance optimization and error handling
   - Optimize animation performance for mobile devices
   - Add proper cleanup of event listeners and React roots
   - Implement graceful handling of animation interruptions
   - Add error boundaries for component failures
   - _Requirements: 6.1, 6.2, 6.4_
 
-- [ ]* 8.1 Write unit tests for error handling
+- [x] 8.1 Write unit tests for error handling
   - Test animation interruption scenarios
   - Test component cleanup on unmount
   - Test error boundary behavior
   - **Validates: Requirements 6.1, 6.2, 6.4**
 
-- [ ] 9. Final integration and cross-browser testing
+- [x] 9. Final integration and cross-browser testing
   - Test complete feature across different browsers and devices
   - Verify no conflicts with existing GPS and zoom controls
   - Test animation smoothness and performance
   - Ensure consistent behavior across all supported platforms
   - _Requirements: All requirements_
 
-- [ ]* 9.1 Write end-to-end property tests
+- [x] 9.1 Write end-to-end property tests
   - Test complete user workflows from any map position
   - Test interaction with existing map controls
   - Test language switching during button usage
   - **Validates: All requirements**
 
-- [ ] 10. Final checkpoint - Ensure all tests pass
+- [x] 10. Final checkpoint - Ensure all tests pass
   - Ensure all tests pass, ask the user if questions arise.
 
 ## Notes

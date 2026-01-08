@@ -1,3 +1,4 @@
+import React from 'react';
 import { PrefectureProperties, TrackProperties } from '@/types/map';
 import booleanPointInPolygon from '@turf/boolean-point-in-polygon';
 import type { Feature, FeatureCollection, Geometry, MultiPolygon, Point, Position } from 'geojson';

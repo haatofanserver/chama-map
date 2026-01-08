@@ -1,3 +1,4 @@
+import React from 'react';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, fireEvent, act, waitFor } from '@testing-library/react';
 import * as fc from 'fast-check';
@@ -31,8 +32,8 @@ vi.mock('leaflet', () => ({
       createShadow: vi.fn(() => null),
     })),
     Control: class MockControl {
-      protected options: any;
-      constructor(options?: any) {
+      protected options: Record<string, unknown>;
+      constructor(options?: Record<string, unknown>) {
         this.options = options || {};
       }
       onAdd = vi.fn(() => {

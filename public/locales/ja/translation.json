@@ -5,6 +5,11 @@
     "close": "閉じる",
     "open": "開く"
   },
+  "error": {
+    "componentError": "コンポーネントエラー",
+    "unknownError": "不明なエラーが発生しました",
+    "retry": "再試行"
+  },
   "map": {
     "title": "はあちゃまの旅行マップ",
     "description": "はあちゃまの日本旅行を探索しよう",
