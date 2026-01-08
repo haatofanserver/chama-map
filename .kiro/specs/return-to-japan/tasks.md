@@ -19,61 +19,61 @@ This implementation plan breaks down the Return to Japan button feature into dis
   - **Property 8: Responsive behavior**
   - **Validates: Requirements 1.5, 5.4, 6.5**
 
-- [ ] 2. Implement Japan navigation functionality
+- [x] 2. Implement Japan navigation functionality
   - Add Japan view configuration constants (coordinates, zoom, animation options)
   - Implement flyTo animation with proper duration and easing
   - Add animation state management to prevent concurrent animations
   - _Requirements: 2.1, 2.2, 2.3, 2.4, 2.5_
 
-- [ ]* 2.1 Write property tests for navigation functionality
+- [x] 2.1 Write property tests for navigation functionality
   - **Property 2: Navigation to Japan coordinates**
   - **Property 3: Animation configuration consistency**
   - **Property 9: Animation conflict handling**
   - **Validates: Requirements 2.1, 2.2, 2.3, 2.4, 2.5, 7.3**
 
-- [ ] 3. Add interactive states and accessibility
+- [x] 3. Add interactive states and accessibility
   - Implement hover, active, and loading states for the button
   - Add keyboard accessibility (focus, Enter, Space key handling)
   - Include proper ARIA labels and screen reader support
   - Add button disable/enable logic during animations
   - _Requirements: 3.1, 3.2, 3.3, 3.4, 3.5, 4.1, 4.2_
 
-- [ ]* 3.1 Write property tests for interactive states
+- [x] 3.1 Write property tests for interactive states
   - **Property 4: Interactive state management**
   - **Property 5: Keyboard accessibility**
   - **Validates: Requirements 3.1, 3.2, 3.3, 3.4, 3.5, 4.2**
 
-- [ ] 4. Add internationalization support
+- [x] 4. Add internationalization support
   - Add Return to Japan translations to `public/locales/en/translation.json`
   - Add Japanese translations to `public/locales/ja/translation.json`
   - Include tooltip text, ARIA labels, and button descriptions
   - Integrate with existing i18n system for dynamic language switching
   - _Requirements: 4.3, 4.4, 5.1, 5.2, 5.3, 5.5_
 
-- [ ]* 4.1 Write property tests for internationalization
+- [x] 4.1 Write property tests for internationalization
   - **Property 6: Comprehensive localization**
   - **Validates: Requirements 4.4, 5.3, 5.5**
 
-- [ ]* 4.2 Write unit tests for specific translations
+- [x] 4.2 Write unit tests for specific translations
   - Test English tooltip text "Return to Japan"
   - Test Japanese tooltip text "日本に戻る"
   - Test ARIA label localization
   - **Validates: Requirements 4.3, 5.1, 5.2**
 
-- [ ] 5. Integrate ReturnToJapanButton into JapanMap
+- [x] 5. Integrate ReturnToJapanButton into JapanMap
   - Modify `src/components/map/JapanMap.tsx` to include the new button
   - Position button in bottomright area with existing controls
   - Add animation state management to JapanMap component
   - Handle button click events and map navigation
   - _Requirements: 1.3, 7.1, 7.4_
 
-- [ ]* 5.1 Write integration tests
+- [ ] 5.1 Write integration tests
   - Test component integration within JapanMap
   - Test positioning relative to existing controls
   - **Property 10: Non-interference with existing functionality**
   - **Validates: Requirements 1.3, 7.1, 7.4**
 
-- [ ] 6. Checkpoint - Ensure all tests pass
+- [x] 6. Checkpoint - Ensure all tests pass
   - Ensure all tests pass, ask the user if questions arise.
 
 - [ ] 7. Add CSS styling and responsive design

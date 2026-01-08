@@ -182,6 +182,19 @@ vi.mock('./MapStyles', () => ({
   default: () => <div data-testid="map-styles" />,
 }));
 
+// Mock ReturnToJapanButton
+vi.mock('./ReturnToJapanButton', () => ({
+  default: ({ onReturnToJapan, isAnimating, controlPosition, ...props }: any) => (
+    <div
+      data-testid="return-to-japan-button"
+      data-animating={isAnimating}
+      data-position={controlPosition}
+      onClick={onReturnToJapan}
+      {...props}
+    />
+  ),
+}));
+
 // Test wrapper component
 const TestWrapper: React.FC<{ children: React.ReactNode }> = ({ children }) => (
   <I18nextProvider i18n={i18n}>
@@ -591,5 +604,216 @@ describe('JapanMap Integration Tests', () => {
 
     // GPS control should be added
     expect(mockAddControl).toHaveBeenCalled();
+  });
+
+  /**
+   * Integration Test: ReturnToJapanButton integration within JapanMap
+   * Property 10: Non-interference with existing functionality
+   * Validates: Requirements 1.3, 7.1, 7.4
+   */
+  it('should integrate ReturnToJapanButton correctly within JapanMap', () => {
+    mockUseGeolocation.mockReturnValue({
+      position: null,
+      error: null,
+      isLoading: false,
+      isPermissionGranted: false,
+      requestLocation: vi.fn(),
+      watchPosition: vi.fn(),
+      stopWatching: vi.fn(),
+    });
+
+    let container: HTMLElement;
+    act(() => {
+      const result = render(
+        <TestWrapper>
+          <JapanMap
+            japanData={sampleJapanData}
+            chamaTrack={sampleChamaTrack}
+            className="test-map"
+          />
+        </TestWrapper>
+      );
+      container = result.container;
+    });
+
+    // Should render ReturnToJapanButton
+    const returnButton = container!.querySelector('[data-testid="return-to-japan-button"]');
+    expect(returnButton).toBeInTheDocument();
+
+    // Should be positioned in bottomright with other controls
+    expect(returnButton?.getAttribute('data-position')).toBe('bottomright');
+
+    // Should not be animating initially
+    expect(returnButton?.getAttribute('data-animating')).toBe('false');
+
+    // Should render alongside existing controls without interference
+    const zoomControl = container!.querySelector('[data-testid="zoom-control"]');
+    expect(zoomControl).toBeInTheDocument();
+
+    // GPS control should still be added
+    expect(mockAddControl).toHaveBeenCalled();
+
+    // Map container should still render correctly
+    const mapContainer = container!.querySelector('[data-testid="map-container"]');
+    expect(mapContainer).toBeInTheDocument();
+  });
+
+  /**
+   * Integration Test: ReturnToJapanButton positioning relative to existing controls
+   * Validates: Requirements 1.3, 7.1, 7.4
+   */
+  it('should position ReturnToJapanButton correctly relative to existing controls', () => {
+    mockUseGeolocation.mockReturnValue({
+      position: null,
+      error: null,
+      isLoading: false,
+      isPermissionGranted: true,
+      requestLocation: vi.fn(),
+      watchPosition: vi.fn(),
+      stopWatching: vi.fn(),
+    });
+
+    let container: HTMLElement;
+    act(() => {
+      const result = render(
+        <TestWrapper>
+          <JapanMap
+            japanData={sampleJapanData}
+            chamaTrack={sampleChamaTrack}
+            className="test-map"
+          />
+        </TestWrapper>
+      );
+      container = result.container;
+    });
+
+    // All controls should be positioned in bottomright
+    const zoomControl = container!.querySelector('[data-testid="zoom-control"]');
+    expect(zoomControl?.getAttribute('data-position')).toBe('bottomright');
+
+    const returnButton = container!.querySelector('[data-testid="return-to-japan-button"]');
+    expect(returnButton?.getAttribute('data-position')).toBe('bottomright');
+
+    // Both controls should exist without conflicts
+    expect(zoomControl).toBeInTheDocument();
+    expect(returnButton).toBeInTheDocument();
+
+    // GPS control should be added (via Leaflet control system)
+    expect(mockAddControl).toHaveBeenCalled();
+  });
+
+  /**
+   * Integration Test: ReturnToJapanButton animation state management
+   * Validates: Requirements 1.3, 7.1, 7.4
+   */
+  it('should handle ReturnToJapanButton animation state correctly', () => {
+    mockUseGeolocation.mockReturnValue({
+      position: null,
+      error: null,
+      isLoading: false,
+      isPermissionGranted: false,
+      requestLocation: vi.fn(),
+      watchPosition: vi.fn(),
+      stopWatching: vi.fn(),
+    });
+
+    let container: HTMLElement;
+    act(() => {
+      const result = render(
+        <TestWrapper>
+          <JapanMap
+            japanData={sampleJapanData}
+            chamaTrack={sampleChamaTrack}
+            className="test-map"
+          />
+        </TestWrapper>
+      );
+      container = result.container;
+    });
+
+    const returnButton = container!.querySelector('[data-testid="return-to-japan-button"]');
+    expect(returnButton).toBeInTheDocument();
+
+    // Initially should not be animating
+    expect(returnButton?.getAttribute('data-animating')).toBe('false');
+
+    // The ReturnToJapanButton component handles the animation logic internally
+    // We can verify it's integrated correctly by checking it renders and has correct props
+    expect(returnButton?.getAttribute('data-position')).toBe('bottomright');
+  });
+
+  /**
+   * Property Test: Non-interference with existing functionality
+   * Property 10: Non-interference with existing functionality
+   * Validates: Requirements 1.3, 7.1, 7.4
+   */
+  it('should not interfere with existing map functionality when ReturnToJapanButton is present', () => {
+    const mockRequestLocation = vi.fn();
+    const mockWatchPosition = vi.fn();
+    const position: UserGeolocationPosition = {
+      lat: 35.6762,
+      lng: 139.6503,
+      accuracy: 10,
+      timestamp: Date.now(),
+    };
+
+    mockUseGeolocation.mockReturnValue({
+      position,
+      error: null,
+      isLoading: false,
+      isPermissionGranted: true,
+      requestLocation: mockRequestLocation,
+      watchPosition: mockWatchPosition,
+      stopWatching: vi.fn(),
+    });
+
+    let container: HTMLElement;
+    act(() => {
+      const result = render(
+        <TestWrapper>
+          <JapanMap
+            japanData={sampleJapanData}
+            chamaTrack={sampleChamaTrack}
+            className="test-map"
+          />
+        </TestWrapper>
+      );
+      container = result.container;
+    });
+
+    // All existing functionality should still work
+
+    // Map should render
+    const mapContainer = container!.querySelector('[data-testid="map-container"]');
+    expect(mapContainer).toBeInTheDocument();
+
+    // Zoom control should render
+    const zoomControl = container!.querySelector('[data-testid="zoom-control"]');
+    expect(zoomControl).toBeInTheDocument();
+
+    // GeoJSON layer should render
+    const geoJsonLayer = container!.querySelector('[data-testid="geojson"]');
+    expect(geoJsonLayer).toBeInTheDocument();
+
+    // GPS control should be added
+    expect(mockAddControl).toHaveBeenCalled();
+
+    // Track markers should render
+    const trackMarkers = container!.querySelectorAll('[data-testid="track-marker"]');
+    expect(trackMarkers.length).toBeGreaterThan(0);
+
+    // Current position markers should render
+    const markers = container!.querySelectorAll('[data-testid="marker"]');
+    expect(markers.length).toBeGreaterThan(0);
+
+    // ReturnToJapanButton should be present but not interfere
+    const returnButton = container!.querySelector('[data-testid="return-to-japan-button"]');
+    expect(returnButton).toBeInTheDocument();
+
+    // All components should coexist without conflicts
+    expect(mapContainer).toBeInTheDocument();
+    expect(zoomControl).toBeInTheDocument();
+    expect(returnButton).toBeInTheDocument();
+    expect(geoJsonLayer).toBeInTheDocument();
   });
 });

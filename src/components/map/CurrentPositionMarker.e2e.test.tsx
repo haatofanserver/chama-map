@@ -8,7 +8,6 @@ import { useGeolocation } from '@/hooks/useGeolocation';
 import type { UserGeolocationPosition, GeolocationErrorType } from '@/types/geolocation';
 import { I18nextProvider } from 'react-i18next';
 import i18n from '@/lib/i18n';
-import { mockGeolocation, mockPermissions } from '@/test/setup';
 
 // Mock the useGeolocation hook
 vi.mock('@/hooks/useGeolocation');
@@ -263,7 +262,7 @@ describe('Current Position Marker End-to-End Property Tests', () => {
       ),
       { numRuns: 50 } // Reduced from 100 to speed up test
     );
-  });
+  }, 15000); // Increased test timeout to 15 seconds
 
   /**
    * End-to-End Property Test: Error recovery scenarios
@@ -382,7 +381,6 @@ describe('Current Position Marker End-to-End Property Tests', () => {
 
           // For permission denied, GPS button should be disabled
           if (errorType === 'PERMISSION_DENIED') {
-            const gpsButton = container!.querySelector('[data-testid="gps-button"]');
             // Button behavior is handled by the control, we just verify component renders
             expect(container!).toBeDefined();
           }

@@ -9,6 +9,7 @@ import PrefecturePopup from './PrefecturePopup';
 import MapStyles from './MapStyles';
 import CurrentPositionMarker from './CurrentPositionMarker';
 import GPSControlButton from './GPSControlButton';
+import ReturnToJapanButton from './ReturnToJapanButton';
 import { TrackProperties, PrefectureProperties } from '@/types/map';
 import { useMapRefs } from '@/hooks/useMapRefs';
 import { useGeolocation } from '@/hooks/useGeolocation';
@@ -37,6 +38,7 @@ interface JapanMapProps {
 const JapanMap: React.FC<JapanMapProps> = ({ className, japanData, chamaTrack }) => {
   const [selectedPrefecture, setSelectedPrefecture] = useState<string | null>(null);
   const [popupKey, setPopupKey] = useState<number>(0);
+  const [isAnimatingToJapan, setIsAnimatingToJapan] = useState<boolean>(false);
   const { markerRefs, popupRef, mapRef, isPopupOpening, registerMarkerRef } = useMapRefs();
   const { i18n, t } = useTranslation();
 
@@ -72,6 +74,39 @@ const JapanMap: React.FC<JapanMapProps> = ({ className, japanData, chamaTrack })
     // Start watching for continuous updates
     if (isPermissionGranted) {
       watchPosition();
+    }
+  };
+
+  // Handle Return to Japan button click
+  const handleReturnToJapan = () => {
+    if (!isAnimatingToJapan && mapRef.current) {
+      setIsAnimatingToJapan(true);
+
+      // Set up event listeners to track animation completion
+      const map = mapRef.current;
+
+      const onMoveEnd = () => {
+        setIsAnimatingToJapan(false);
+        map.off('moveend', onMoveEnd);
+        map.off('zoomend', onZoomEnd);
+      };
+
+      const onZoomEnd = () => {
+        setIsAnimatingToJapan(false);
+        map.off('moveend', onMoveEnd);
+        map.off('zoomend', onZoomEnd);
+      };
+
+      // Listen for animation completion
+      map.on('moveend', onMoveEnd);
+      map.on('zoomend', onZoomEnd);
+
+      // Fallback timeout to ensure state is reset even if events don't fire
+      setTimeout(() => {
+        setIsAnimatingToJapan(false);
+        map.off('moveend', onMoveEnd);
+        map.off('zoomend', onZoomEnd);
+      }, 3000); // 3 seconds should be more than enough for any animation
     }
   };
 
@@ -139,6 +174,13 @@ const JapanMap: React.FC<JapanMapProps> = ({ className, japanData, chamaTrack })
           isLoading={isLoading}
           isDisabled={!navigator.geolocation || (error?.code === 'PERMISSION_DENIED')}
           position={position}
+          controlPosition="bottomright"
+        />
+
+        {/* Return to Japan Button */}
+        <ReturnToJapanButton
+          onReturnToJapan={handleReturnToJapan}
+          isAnimating={isAnimatingToJapan}
           controlPosition="bottomright"
         />
 

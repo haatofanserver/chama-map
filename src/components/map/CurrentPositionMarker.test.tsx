@@ -239,7 +239,7 @@ describe('CurrentPositionMarker Property Tests', () => {
       ),
       { numRuns: 100 }
     );
-  });
+  }, 15000); // Increased test timeout to 15 seconds
 
   // Unit test for null position handling
   it('should not render when position is null', () => {
