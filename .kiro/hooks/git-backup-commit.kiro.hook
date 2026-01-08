@@ -1,0 +1,13 @@
+{
+  "enabled": true,
+  "name": "Git Backup on Agent Complete",
+  "description": "Creates a backup branch and commits all changes when an agent task is marked as completed",
+  "version": "1",
+  "when": {
+    "type": "agentStop"
+  },
+  "then": {
+    "type": "runCommand",
+    "command": "git checkout -b backup-$(date +%Y%m%d-%H%M%S) && git add . && git commit -m \"Backup: Agent task completed at $(date)\" && git checkout -"
+  }
+}

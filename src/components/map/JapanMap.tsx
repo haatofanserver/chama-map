@@ -7,8 +7,11 @@ import TrackMarker from './TrackMarker';
 import MapEventHandler from './MapEventHandler';
 import PrefecturePopup from './PrefecturePopup';
 import MapStyles from './MapStyles';
+import CurrentPositionMarker from './CurrentPositionMarker';
+import GPSControlButton from './GPSControlButton';
 import { TrackProperties, PrefectureProperties } from '@/types/map';
 import { useMapRefs } from '@/hooks/useMapRefs';
+import { useGeolocation } from '@/hooks/useGeolocation';
 import { getFeatureStyle } from '@/utils/mapStyles';
 import { createPrefectureHandlers } from '@/utils/mapPrefectureUtils';
 // import '@/lib/SmoothWheelZoom';
@@ -35,12 +38,42 @@ const JapanMap: React.FC<JapanMapProps> = ({ className, japanData, chamaTrack })
   const [selectedPrefecture, setSelectedPrefecture] = useState<string | null>(null);
   const [popupKey, setPopupKey] = useState<number>(0);
   const { markerRefs, popupRef, mapRef, isPopupOpening, registerMarkerRef } = useMapRefs();
-  const { i18n } = useTranslation();
+  const { i18n, t } = useTranslation();
+
+  // Initialize geolocation hook
+  const {
+    position,
+    error,
+    isLoading,
+    isPermissionGranted,
+    requestLocation,
+    watchPosition
+  } = useGeolocation({
+    enableHighAccuracy: true,
+    timeout: 10000,
+    maximumAge: 60000
+  });
 
   const groupedChamaTracks = useMemo(() => {
     if (!chamaTrack) return {};
     return groupMapByNameAndCoordinates(chamaTrack, 6);
   }, [chamaTrack]);
+
+  // Handle GPS button click - request location and start watching
+  const handleGPSClick = () => {
+    if (!isPermissionGranted) {
+      requestLocation();
+    } else if (!position) {
+      requestLocation();
+    } else {
+      // Position exists, GPS button will center the map (handled in GPSControlButton)
+    }
+
+    // Start watching for continuous updates
+    if (isPermissionGranted) {
+      watchPosition();
+    }
+  };
 
   // Create prefecture interaction handlers
   const onEachFeature = createPrefectureHandlers(
@@ -70,6 +103,22 @@ const JapanMap: React.FC<JapanMapProps> = ({ className, japanData, chamaTrack })
 
   return (
     <div className={className} style={{ position: 'relative' }}>
+      {/* Display geolocation error messages */}
+      {error && (
+        <div className="absolute top-4 left-4 z-[1000] bg-red-100 border border-red-400 text-red-700 px-3 py-2 rounded shadow-lg">
+          <div className="text-sm font-medium">
+            {error.code === 'PERMISSION_DENIED' && t('geolocation.permissionDenied')}
+            {error.code === 'POSITION_UNAVAILABLE' && t('geolocation.positionUnavailable')}
+            {error.code === 'TIMEOUT' && t('geolocation.timeout')}
+          </div>
+          {error.code === 'PERMISSION_DENIED' && (
+            <div className="text-xs mt-1">
+              {t('geolocation.enableLocationInstructions')}
+            </div>
+          )}
+        </div>
+      )}
+
       <MapContainer
         center={[36.2048, 138.2529]}
         zoom={6}
@@ -83,6 +132,16 @@ const JapanMap: React.FC<JapanMapProps> = ({ className, japanData, chamaTrack })
       // smoothSensitivity={1}
       >
         <ZoomControl position="bottomright" />
+
+        {/* GPS Control Button */}
+        <GPSControlButton
+          onLocate={handleGPSClick}
+          isLoading={isLoading}
+          isDisabled={!navigator.geolocation || (error?.code === 'PERMISSION_DENIED')}
+          position={position}
+          controlPosition="bottomright"
+        />
+
         <MapEventHandler
           onPopupClose={() => setSelectedPrefecture(null)}
           isPopupOpening={isPopupOpening}
@@ -109,6 +168,14 @@ const JapanMap: React.FC<JapanMapProps> = ({ className, japanData, chamaTrack })
             onEachFeature={onEachFeature}
           />
         )}
+
+        {/* Current Position Marker */}
+        <CurrentPositionMarker
+          position={position}
+          accuracy={position?.accuracy}
+          isLoading={isLoading}
+          isPermissionGranted={isPermissionGranted}
+        />
 
         {/* Render markers for all track */}
         {chamaTrack?.features.map((feature, idx) => {
