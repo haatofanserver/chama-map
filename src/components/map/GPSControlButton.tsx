@@ -74,6 +74,11 @@ class GPSControl extends L.Control {
           ${this.isDisabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
           ${this.isLoading ? 'animate-pulse' : ''}
         `}
+        style={{
+          // Ensure minimum touch target size for accessibility
+          minWidth: '44px',
+          minHeight: '44px',
+        }}
         onClick={this.isDisabled ? undefined : this.handleClick}
         disabled={this.isDisabled}
         title={this.getTooltipText()}
