@@ -54,8 +54,13 @@ class GPSControl extends L.Control {
 
   onRemove(): void {
     if (this.root) {
-      this.root.unmount();
-      this.root = null;
+      // Use setTimeout to avoid synchronous unmounting during React render
+      setTimeout(() => {
+        if (this.root) {
+          this.root.unmount();
+          this.root = null;
+        }
+      }, 0);
     }
     this.container = null;
   }

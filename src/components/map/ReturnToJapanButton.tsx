@@ -140,7 +140,7 @@ class ReturnToJapanControl extends L.Control {
         this.rafId = null;
       }
 
-      // Cleanup React root with delay to ensure smooth transitions
+      // Cleanup React root with minimal delay to avoid synchronous unmounting
       if (this.root) {
         this.cleanupTimeoutRef = setTimeout(() => {
           try {
@@ -151,7 +151,7 @@ class ReturnToJapanControl extends L.Control {
           } catch (error) {
             console.error('Error unmounting ReturnToJapanControl root:', error);
           }
-        }, PERFORMANCE_CONFIG.CLEANUP_DELAY_MS);
+        }, 0); // Use 0ms delay instead of PERFORMANCE_CONFIG.CLEANUP_DELAY_MS
       }
 
       this.container = null;
