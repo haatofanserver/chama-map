@@ -5,6 +5,11 @@
     "close": "閉じる",
     "open": "開く"
   },
+  "error": {
+    "componentError": "コンポーネントエラー",
+    "unknownError": "不明なエラーが発生しました",
+    "retry": "再試行"
+  },
   "map": {
     "title": "はあちゃまの旅行マップ",
     "description": "はあちゃまの日本旅行を探索しよう",
@@ -46,6 +51,18 @@
     },
     "accept": "同意する",
     "decline": "同意しない"
+  },
+  "geolocation": {
+    "currentLocation": "現在地",
+    "lowAccuracyWarning": "位置精度が低いです",
+    "permissionDenied": "位置情報へのアクセスが拒否されました",
+    "positionUnavailable": "位置情報が利用できません",
+    "timeout": "位置情報の取得がタイムアウトしました",
+    "enableLocationInstructions": "ブラウザの設定で位置情報アクセスを有効にしてください"
+  },
+  "returnToJapan": {
+    "tooltip": "日本に戻る",
+    "ariaLabel": "日本の地図に戻る"
   },
   "otherProject": {
     "title": "その他のプロジェクト",

@@ -1,5 +1,4 @@
-'use client';
-
+import React from 'react';
 import '@/lib/i18n';
 
 export default function TranslationProvider({ children }: { children: React.ReactNode }) {

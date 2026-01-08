@@ -1,4 +1,3 @@
-'use client';
 import React, { useMemo, useState } from 'react';
 import { MapContainer, TileLayer, GeoJSON, ZoomControl } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
@@ -8,15 +7,19 @@ import TrackMarker from './TrackMarker';
 import MapEventHandler from './MapEventHandler';
 import PrefecturePopup from './PrefecturePopup';
 import MapStyles from './MapStyles';
+import CurrentPositionMarker from './CurrentPositionMarker';
+import GPSControlButton from './GPSControlButton';
+import ReturnToJapanButton from './ReturnToJapanButton';
 import { TrackProperties, PrefectureProperties } from '@/types/map';
 import { useMapRefs } from '@/hooks/useMapRefs';
+import { useGeolocation } from '@/hooks/useGeolocation';
 import { getFeatureStyle } from '@/utils/mapStyles';
 import { createPrefectureHandlers } from '@/utils/mapPrefectureUtils';
 // import '@/lib/SmoothWheelZoom';
 import { groupMapByNameAndCoordinates } from '@/utils/groupTrackFeatures';
-import { useTranslation } from 'react-i18next';
+import ErrorBoundary from '@/components/ui/ErrorBoundary';
 
-// Fix for default markers in React Leaflet
+import { useTranslation } from 'react-i18next';
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 delete (L.Icon.Default.prototype as any)._getIconUrl;
 L.Icon.Default.mergeOptions({
@@ -35,13 +38,96 @@ interface JapanMapProps {
 const JapanMap: React.FC<JapanMapProps> = ({ className, japanData, chamaTrack }) => {
   const [selectedPrefecture, setSelectedPrefecture] = useState<string | null>(null);
   const [popupKey, setPopupKey] = useState<number>(0);
+  const [isAnimatingToJapan, setIsAnimatingToJapan] = useState<boolean>(false);
   const { markerRefs, popupRef, mapRef, isPopupOpening, registerMarkerRef } = useMapRefs();
-  const { i18n } = useTranslation();
+  const { i18n, t } = useTranslation();
+
+  // Initialize geolocation hook
+  const {
+    position,
+    error,
+    isLoading,
+    isPermissionGranted,
+    requestLocation,
+    watchPosition
+  } = useGeolocation({
+    enableHighAccuracy: true,
+    timeout: 10000,
+    maximumAge: 60000
+  });
 
   const groupedChamaTracks = useMemo(() => {
     if (!chamaTrack) return {};
     return groupMapByNameAndCoordinates(chamaTrack, 6);
   }, [chamaTrack]);
+
+  // Handle GPS button click - request location and start watching
+  const handleGPSClick = () => {
+    if (!isPermissionGranted) {
+      requestLocation();
+    } else if (!position) {
+      requestLocation();
+    } else {
+      // Position exists, GPS button will center the map (handled in GPSControlButton)
+    }
+
+    // Start watching for continuous updates
+    if (isPermissionGranted) {
+      watchPosition();
+    }
+  };
+
+  // Handle Return to Japan button click with improved animation interruption handling
+  const handleReturnToJapan = () => {
+    if (!isAnimatingToJapan && mapRef.current) {
+      setIsAnimatingToJapan(true);
+
+      // Set up event listeners to track animation completion
+      const map = mapRef.current;
+      let animationCompleted = false;
+      let fallbackTimeout: ReturnType<typeof setTimeout>;
+
+      const completeAnimation = () => {
+        if (!animationCompleted) {
+          animationCompleted = true;
+          setIsAnimatingToJapan(false);
+          // Clean up all event listeners
+          map.off('moveend', onMoveEnd);
+          map.off('zoomend', onZoomEnd);
+          map.off('movestart', onMoveStart);
+          // Clear the fallback timeout
+          if (fallbackTimeout) {
+            clearTimeout(fallbackTimeout);
+          }
+        }
+      };
+
+      const onMoveEnd = () => {
+        completeAnimation();
+      };
+
+      const onZoomEnd = () => {
+        completeAnimation();
+      };
+
+      // Handle animation interruption gracefully
+      const onMoveStart = () => {
+        // If a new movement starts while we're animating, it might be user interruption
+        // We'll let the moveend event handle the completion
+      };
+
+      // Listen for animation completion and interruption
+      map.on('moveend', onMoveEnd);
+      map.on('zoomend', onZoomEnd);
+      map.on('movestart', onMoveStart);
+
+      // Fallback timeout to ensure state is reset even if events don't fire
+      // Use a longer timeout to account for slower mobile devices
+      fallbackTimeout = setTimeout(() => {
+        completeAnimation();
+      }, 5000); // 5 seconds should be more than enough for any animation
+    }
+  };
 
   // Create prefecture interaction handlers
   const onEachFeature = createPrefectureHandlers(
@@ -71,19 +157,63 @@ const JapanMap: React.FC<JapanMapProps> = ({ className, japanData, chamaTrack })
 
   return (
     <div className={className} style={{ position: 'relative' }}>
+      {/* Display geolocation error messages */}
+      {error && (
+        <div className="absolute top-4 left-4 z-[1000] bg-red-100 border border-red-400 text-red-700 px-3 py-2 rounded shadow-lg">
+          <div className="text-sm font-medium">
+            {error.code === 'PERMISSION_DENIED' && t('geolocation.permissionDenied')}
+            {error.code === 'POSITION_UNAVAILABLE' && t('geolocation.positionUnavailable')}
+            {error.code === 'TIMEOUT' && t('geolocation.timeout')}
+          </div>
+          {error.code === 'PERMISSION_DENIED' && (
+            <div className="text-xs mt-1">
+              {t('geolocation.enableLocationInstructions')}
+            </div>
+          )}
+        </div>
+      )}
+
       <MapContainer
         center={[36.2048, 138.2529]}
         zoom={6}
         style={{ height: '100%', width: '100%' }}
         className="rounded-lg shadow-lg"
         zoomControl={false}
-        // scrollWheelZoom={false}
-        // zoomSnap={1}
-        // /** @ts-expect-error smoothWheelZoom is not a valid prop */
-        // smoothWheelZoom={true}
-        // smoothSensitivity={1}
+      // scrollWheelZoom={false}
+      // zoomSnap={1}
+      // /** @ts-expect-error smoothWheelZoom is not a valid prop */
+      // smoothWheelZoom={true}
+      // smoothSensitivity={1}
       >
         <ZoomControl position="bottomright" />
+
+        {/* GPS Control Button */}
+        <GPSControlButton
+          onLocate={handleGPSClick}
+          isLoading={isLoading}
+          isDisabled={!navigator.geolocation || (error?.code === 'PERMISSION_DENIED')}
+          position={position}
+          controlPosition="bottomright"
+        />
+
+        {/* Return to Japan Button with Error Boundary */}
+        <ErrorBoundary
+          fallback={
+            <div className="leaflet-control leaflet-bar leaflet-control-custom" style={{ position: 'absolute', bottom: '10px', right: '10px' }}>
+              <div className="w-8 h-8 bg-red-100 border border-red-300 rounded-sm flex items-center justify-center">
+                <span className="text-red-600 text-xs">⚠️</span>
+              </div>
+            </div>
+          }
+          onError={(error) => console.error('ReturnToJapanButton error:', error)}
+        >
+          <ReturnToJapanButton
+            onReturnToJapan={handleReturnToJapan}
+            isAnimating={isAnimatingToJapan}
+            controlPosition="bottomright"
+          />
+        </ErrorBoundary>
+
         <MapEventHandler
           onPopupClose={() => setSelectedPrefecture(null)}
           isPopupOpening={isPopupOpening}
@@ -99,7 +229,7 @@ const JapanMap: React.FC<JapanMapProps> = ({ className, japanData, chamaTrack })
           <TileLayer
             url="https://cyberjapandata.gsi.go.jp/xyz/pale/{z}/{x}/{y}.png"
             attribution='出典: <a href="https://maps.gsi.go.jp/development/ichiran.html" target="_blank" rel="noreferrer">国土地理院（地理院タイル）</a>'
-            // updateWhenZooming={false}
+          // updateWhenZooming={false}
           />
         )}
 
@@ -110,6 +240,14 @@ const JapanMap: React.FC<JapanMapProps> = ({ className, japanData, chamaTrack })
             onEachFeature={onEachFeature}
           />
         )}
+
+        {/* Current Position Marker */}
+        <CurrentPositionMarker
+          position={position}
+          accuracy={position?.accuracy}
+          isLoading={isLoading}
+          isPermissionGranted={isPermissionGranted}
+        />
 
         {/* Render markers for all track */}
         {chamaTrack?.features.map((feature, idx) => {

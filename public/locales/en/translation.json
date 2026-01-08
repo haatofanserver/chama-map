@@ -5,6 +5,11 @@
     "close": "Close",
     "open": "Open"
   },
+  "error": {
+    "componentError": "Component Error",
+    "unknownError": "An unknown error occurred",
+    "retry": "Retry"
+  },
   "map": {
     "title": "Akai Travel Map",
     "description": "Explore Haachama's journey across Japan",
@@ -46,6 +51,18 @@
     },
     "accept": "Accept",
     "decline": "Decline"
+  },
+  "geolocation": {
+    "currentLocation": "Current Location",
+    "lowAccuracyWarning": "Low accuracy location",
+    "permissionDenied": "Location access denied",
+    "positionUnavailable": "Location unavailable",
+    "timeout": "Location request timed out",
+    "enableLocationInstructions": "Please enable location access in your browser settings"
+  },
+  "returnToJapan": {
+    "tooltip": "Return to Japan",
+    "ariaLabel": "Return to Japan view"
   },
   "otherProject": {
     "title": "Other Projects",

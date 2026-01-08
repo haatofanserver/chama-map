@@ -1,0 +1,81 @@
+{
+  "common": {
+    "loading": "Loading...",
+    "error": "Error",
+    "close": "Close",
+    "open": "Open"
+  },
+  "map": {
+    "title": "Akai Travel Map",
+    "description": "Explore Haachama's journey across Japan",
+    "prefecture": "Prefecture",
+    "location": "Location",
+    "date": "Date",
+    "noTracks": "No Haachama tracks found in this prefecture"
+  },
+  "navigation": {
+    "home": "Home",
+    "about": "About",
+    "settings": "Settings"
+  },
+  "language": {
+    "english": "English",
+    "japanese": "Japanese",
+    "switchTo": "Switch to {{language}}"
+  },
+  "meta": {
+    "title": "Akai Journey",
+    "description": "Chama Travel Log"
+  },
+  "infoPanel": {
+    "description": "Interactive map for finding where Chama has been!",
+    "createdBy": "Created by ♡₊ ‧ ❛Akai Haato Fan Server༉˚₊ ‧♡",
+    "comments": "Comments / Contact:"
+  },
+  "guideline": {
+    "title": "Guideline",
+    "wiki_seichi_junrei": "https://en.wikipedia.org/wiki/Seichi_junrei",
+    "site_manner": "https://www.japan.travel/en/guide/japanese-manners-dos-and-donts/",
+    "body": {
+      "p1": "Haachama-chama~!",
+      "p2": "This site displays the locations of photos posted by \"<1>Akai Haato</1>\" across various prefectures in Japan, helping fans to enjoy their <2>Seichi-junrei</2> even more.<br />You may also share your own photos using her fan-activity tag <3>#推し活はあとん日記</3>!",
+      "p3": "Please enjoy sightseeing respectfully by following proper <1>Japanese manners</1>.<br />We ask that you engage with others courteously, without promoting political debates or nationalistic claims.",
+      "li1": "This is an unofficial fan site for Akai Haato, a VTuber affiliated with Hololive. We are not affiliated with Cover Corp or Hololive Production in any way.",
+      "li2": "The place names shown are based on geographic data and map tiles provided by third parties, and may not reflect all perspectives.",
+      "li3": "Also while we strive to provide accurate information, errors may occur."
+    },
+    "accept": "Accept",
+    "decline": "Decline"
+  },
+  "geolocation": {
+    "currentLocation": "Current Location",
+    "lowAccuracyWarning": "Low accuracy location",
+    "permissionDenied": "Location access denied",
+    "positionUnavailable": "Location unavailable",
+    "timeout": "Location request timed out",
+    "enableLocationInstructions": "Please enable location access in your browser settings"
+  },
+  "returnToJapan": {
+    "tooltip": "Return to Japan",
+    "ariaLabel": "Return to Japan view"
+  },
+  "otherProject": {
+    "title": "Other Projects",
+    "link1": {
+      "title": "Chamacord videos",
+      "url": "https://www.youtube.com/@chamacord6326/videos"
+    },
+    "link2": {
+      "title": "WWS Haato videos",
+      "url": "https://www.youtube.com/@WWSHaato/videos"
+    },
+    "link3": {
+      "title": "Haato's Diary Visual Novel",
+      "url": "https://wws-haato.itch.io/haatos-diary"
+    },
+    "link4": {
+      "title": "AKAI HAATO Unofficial Fan Site",
+      "url": "https://red-hearts.com/"
+    }
+  }
+}

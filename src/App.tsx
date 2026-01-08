@@ -1,31 +1,36 @@
-'use client';
-import dynamic from 'next/dynamic';
-import React, { useState, useEffect } from 'react';
-import SplashScreen from '@/components/ui/SplashScreen';
+import React, { useState, useEffect, Suspense } from 'react';
 import { AnimatePresence } from 'framer-motion';
+import type { FeatureCollection, MultiPolygon, Point } from 'geojson';
+
+// Components
+import SplashScreen from '@/components/ui/SplashScreen';
 import FloatingArrowButton from '@/components/ui/FloatingArrowButton';
 import InfoPanel from '@/components/ui/InfoPanel';
-import type { FeatureCollection, MultiPolygon, Point } from 'geojson';
-import { TrackProperties, PrefectureProperties } from '@/types/map';
-import { getPrefectureForPoint } from '../utils/mapPrefectureUtils';
-import { getChamaTrack, getJapanPrefectures } from '../services/api';
 import LanguageSelector from '@/components/ui/LanguageSelector';
 import Guideline from '@/components/ui/Guideline';
 import OtherProject from '@/components/ui/OtherProject';
+import DynamicMetadata from '@/components/ui/DynamicMetadata';
 
-const JapanMap = dynamic(() => import('@/components/map/JapanMap'), {
-  ssr: false,
-  loading: () => <div className="flex items-center justify-center h-96">Loading map...</div>
-});
+// Providers
+import StoreProvider from '@/components/providers/StoreProvider';
+import TranslationProvider from '@/components/providers/TranslationProvider';
 
-export default function Home() {
+// Types and utilities
+import { TrackProperties, PrefectureProperties } from '@/types/map';
+import { getPrefectureForPoint } from '@/utils/mapPrefectureUtils';
+import { getChamaTrack, getJapanPrefectures } from '@/services/api';
+
+// Lazy load the map component
+const JapanMap = React.lazy(() => import('@/components/map/JapanMap'));
+
+function AppContent() {
   const [infoOpen, setInfoOpen] = useState(false);
   const [showSplash, setShowSplash] = useState(true);
   const [japanData, setJapanData] = useState<FeatureCollection<MultiPolygon, PrefectureProperties> | null>(null);
   const [chamaTrack, setChamaTrack] = useState<FeatureCollection<Point, TrackProperties> | null>(null);
 
   useEffect(() => {
-    let splashTimeout: NodeJS.Timeout;
+    let splashTimeout: ReturnType<typeof setTimeout>;
     Promise.all([getJapanPrefectures(), getChamaTrack()]).then(([japan, track]) => {
       setJapanData(japan);
       setChamaTrack(track);
@@ -40,9 +45,12 @@ export default function Home() {
 
   return (
     <div className="min-h-screen min-w-screen w-screen h-screen fixed top-0 left-0 bg-gradient-to-br from-blue-50 to-purple-50">
+      <DynamicMetadata />
       <AnimatePresence>{showSplash && <SplashScreen key="splash" />}</AnimatePresence>
       {!showSplash && japanData && chamaTrack && (
-        <JapanMap className="w-full h-full" japanData={japanData} chamaTrack={chamaTrack} />
+        <Suspense fallback={<div className="flex items-center justify-center h-96">Loading map...</div>}>
+          <JapanMap className="w-full h-full" japanData={japanData} chamaTrack={chamaTrack} />
+        </Suspense>
       )}
       {/* Floating Arrow Button */}
       {!showSplash && <FloatingArrowButton open={infoOpen} onClick={() => setInfoOpen((v) => !v)} />}
@@ -57,3 +65,15 @@ export default function Home() {
     </div>
   );
 }
+
+function App() {
+  return (
+    <StoreProvider>
+      <TranslationProvider>
+        <AppContent />
+      </TranslationProvider>
+    </StoreProvider>
+  );
+}
+
+export default App;

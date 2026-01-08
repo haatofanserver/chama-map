@@ -7,7 +7,9 @@ import striptags from 'striptags';
 function getImageUrlFromFiles(files: Unzipped, iconPath: string) {
   const fileData = files[iconPath];
   if (!fileData) return null;
-  const blob = new Blob([fileData], { type: 'image/png' }); // or infer type from extension
+  // Create a new Uint8Array to ensure compatibility
+  const uint8Array = new Uint8Array(fileData);
+  const blob = new Blob([uint8Array], { type: 'image/png' });
   return URL.createObjectURL(blob);
 }
 

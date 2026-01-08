@@ -1,5 +1,3 @@
-'use client';
-
 import { useTranslation } from 'react-i18next';
 import { useEffect } from 'react';
 
@@ -16,7 +14,7 @@ interface DynamicMetadataProps {
  * DynamicMetadata component that updates meta tags on the client side.
  *
  * This component works with static site generation by:
- * 1. Using static meta tags from Next.js metadata API in the initial HTML
+ * 1. Using static meta tags from the initial HTML
  * 2. Updating these meta tags dynamically when the component mounts or language changes
  *
  * Usage:
