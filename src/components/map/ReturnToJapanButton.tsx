@@ -466,19 +466,14 @@ const ReturnToJapanButton: React.FC<ReturnToJapanButtonProps> = ({
           cleanupTimeoutRef.current = null;
         }
 
-        // Remove control with proper cleanup
+        // Remove control with immediate cleanup to prevent duplicates
         if (controlRef.current && map) {
-          // Delay removal to ensure smooth transitions
-          cleanupTimeoutRef.current = setTimeout(() => {
-            try {
-              if (controlRef.current && map) {
-                map.removeControl(controlRef.current);
-              }
-            } catch (error) {
-              console.error('Error removing control during cleanup:', error);
-            }
+          try {
+            map.removeControl(controlRef.current);
             controlRef.current = null;
-          }, PERFORMANCE_CONFIG.CLEANUP_DELAY_MS);
+          } catch (error) {
+            console.error('Error removing control during cleanup:', error);
+          }
         }
       } catch (error) {
         console.error('Error during ReturnToJapanButton cleanup:', error);
