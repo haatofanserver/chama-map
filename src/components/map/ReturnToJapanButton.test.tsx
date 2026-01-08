@@ -3,7 +3,8 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, act } from '@testing-library/react';
 import * as fc from 'fast-check';
 import { MapContainer } from 'react-leaflet';
-import ReturnToJapanButton, { JAPAN_DEFAULT_VIEW, ANIMATION_CONFIG } from './ReturnToJapanButton';
+import ReturnToJapanButton from './ReturnToJapanButton';
+import { JAPAN_DEFAULT_VIEW, ANIMATION_CONFIG } from '@/constants/japanMapConstants';
 import { I18nextProvider } from 'react-i18next';
 import i18n from '@/lib/i18n';
 
