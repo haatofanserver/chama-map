@@ -1,17 +1,19 @@
-import React from 'react';
-import { Popup } from 'react-leaflet';
+import React, { useEffect, useState } from 'react';
+import { Popup, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import type { FeatureCollection, Point, MultiPolygon } from 'geojson';
 import type { TrackMarkerHandle } from './TrackMarker';
-import { TrackProperties, PrefectureProperties } from '@/types/map';
+import { TrackProperties, PrefectureProperties, SmartPositionConfig } from '@/types/map';
 import type { Feature } from 'geojson';
 import { getGroupingKeyForFeature } from '@/utils/groupTrackFeatures';
 import { useTranslation } from 'react-i18next';
 import { FaXmark } from 'react-icons/fa6';
+import { ViewportCalculator, PopupSize } from '@/utils/ViewportCalculator';
 import styles from './PrefecturePopup.module.css';
 
 interface PrefecturePopupProps {
   selectedPrefecture: string;
+  positionConfig: SmartPositionConfig;
   chamaTrack: FeatureCollection<Point, TrackProperties>;
   japanData: FeatureCollection<MultiPolygon, PrefectureProperties>;
   markerRefs: React.RefObject<Record<string, React.RefObject<TrackMarkerHandle | null>[]>>;
@@ -21,6 +23,7 @@ interface PrefecturePopupProps {
 
 const PrefecturePopup = ({
   selectedPrefecture,
+  positionConfig,
   chamaTrack,
   japanData,
   markerRefs,
@@ -28,15 +31,62 @@ const PrefecturePopup = ({
   groupedMap
 }: PrefecturePopupProps) => {
   const { t, i18n } = useTranslation();
+  const map = useMap();
+  const [adjustedPosition, setAdjustedPosition] = useState<[number, number] | null>(null);
 
   const tracks = chamaTrack.features.filter((f) => f.properties.prefecture === selectedPrefecture);
 
   // Find the center of the prefecture for popup placement
   const feature = japanData?.features.find((f) => f.properties!.nam === selectedPrefecture);
-  let center: [number, number] = [36.2048, 138.2529];
-  if (feature && feature.properties?.center) {
-    center = feature.properties.center;
-  }
+
+  // Calculate adjusted position when component mounts or position config changes
+  useEffect(() => {
+    if (!map || !positionConfig) return;
+
+    // Default popup size - these values should match the actual popup dimensions
+    const defaultPopupSize: PopupSize = {
+      width: 300,
+      height: 200
+    };
+
+    let basePosition: [number, number];
+
+    // Determine base position based on smart positioning logic
+    if (positionConfig.useClickPosition) {
+      // Validate click position before using it
+      const isValidClick = ViewportCalculator.validateClickPosition(
+        positionConfig.clickPosition,
+        positionConfig.prefectureCenter
+      );
+
+      basePosition = isValidClick ? positionConfig.clickPosition : positionConfig.prefectureCenter;
+    } else {
+      basePosition = positionConfig.prefectureCenter;
+    }
+
+    // Adjust position for viewport visibility and control collision avoidance
+    const adjustedPos = ViewportCalculator.adjustPositionForVisibilityAndControls(
+      basePosition,
+      positionConfig.viewportBounds,
+      defaultPopupSize,
+      map
+    );
+
+    setAdjustedPosition(adjustedPos);
+
+    console.log('PrefecturePopup positioning:', {
+      useClickPosition: positionConfig.useClickPosition,
+      clickPosition: positionConfig.clickPosition,
+      prefectureCenter: positionConfig.prefectureCenter,
+      basePosition,
+      adjustedPosition: adjustedPos,
+      controlsDetected: ViewportCalculator.getControlBounds(map).length
+    });
+  }, [map, positionConfig, selectedPrefecture]);
+
+  // Determine final popup position
+  const popupPosition: [number, number] = adjustedPosition ||
+    (positionConfig.useClickPosition ? positionConfig.clickPosition : positionConfig.prefectureCenter);
 
   // Deduplicated groups for the selected prefecture when groupedMap is provided
   const groupedList: Feature<Point, TrackProperties>[][] | null = groupedMap
@@ -47,8 +97,8 @@ const PrefecturePopup = ({
 
   return (
     <Popup
-      position={center}
-      autoPan={true}
+      position={popupPosition}
+      autoPan={false} // Disable autoPan since we're handling positioning manually
       className={styles['prefecture-popup']}
       ref={(ref) => {
         if (ref) {

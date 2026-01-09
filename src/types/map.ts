@@ -1,3 +1,5 @@
+import L from 'leaflet';
+
 export interface PrefectureProperties {
   nam: string;
   nam_ja: string;
@@ -20,4 +22,12 @@ export interface TrackProperties {
   descriptionJp?: string; // from ExtendedData
   links: string[]; // space-separated URLs from ExtendedData
   // tweets: string[];
+}
+
+export interface SmartPositionConfig {
+  prefectureCenter: [number, number];
+  clickPosition: [number, number];
+  useClickPosition: boolean;
+  viewportBounds: L.LatLngBounds;
+  adjustedPosition?: [number, number];
 }

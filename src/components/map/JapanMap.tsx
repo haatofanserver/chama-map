@@ -10,7 +10,7 @@ import MapStyles from './MapStyles';
 import CurrentPositionMarker from './CurrentPositionMarker';
 import GPSControlButton from './GPSControlButton';
 import ReturnToJapanButton from './ReturnToJapanButton';
-import { TrackProperties, PrefectureProperties } from '@/types/map';
+import { TrackProperties, PrefectureProperties, SmartPositionConfig } from '@/types/map';
 import { useMapRefs } from '@/hooks/useMapRefs';
 import { useGeolocation } from '@/hooks/useGeolocation';
 import { getFeatureStyle } from '@/utils/mapStyles';
@@ -37,6 +37,7 @@ interface JapanMapProps {
 
 const JapanMap: React.FC<JapanMapProps> = ({ className, japanData, chamaTrack }) => {
   const [selectedPrefecture, setSelectedPrefecture] = useState<string | null>(null);
+  const [positionConfig, setPositionConfig] = useState<SmartPositionConfig | null>(null);
   const [popupKey, setPopupKey] = useState<number>(0);
   const [isAnimatingToJapan, setIsAnimatingToJapan] = useState<boolean>(false);
   const { markerRefs, popupRef, mapRef, isPopupOpening, registerMarkerRef } = useMapRefs();
@@ -131,7 +132,9 @@ const JapanMap: React.FC<JapanMapProps> = ({ className, japanData, chamaTrack })
 
   // Create prefecture interaction handlers
   const onEachFeature = createPrefectureHandlers(
-    (name: string) => {
+    (name: string, smartPositionConfig: SmartPositionConfig) => {
+      console.log('Prefecture handler called:', name, smartPositionConfig);
+
       // If only one grouped track exists in this prefecture, open it directly
       const groupsForPrefecture = Object.values(groupedChamaTracks).filter(
         (group) => group.length > 0 && group[0].properties.prefecture === name
@@ -147,9 +150,18 @@ const JapanMap: React.FC<JapanMapProps> = ({ className, japanData, chamaTrack })
         }
         return;
       }
-      // Otherwise show prefecture list popup
+
+      // Otherwise show prefecture list popup with smart positioning
+      console.log('Setting prefecture popup with smart positioning:', {
+        prefecture: name,
+        useClickPosition: smartPositionConfig.useClickPosition,
+        clickPosition: smartPositionConfig.clickPosition,
+        prefectureCenter: smartPositionConfig.prefectureCenter
+      });
+
       setPopupKey((prev) => prev + 1);
       setSelectedPrefecture(name);
+      setPositionConfig(smartPositionConfig);
     },
     isPopupOpening,
     chamaTrack
@@ -215,7 +227,10 @@ const JapanMap: React.FC<JapanMapProps> = ({ className, japanData, chamaTrack })
         </ErrorBoundary>
 
         <MapEventHandler
-          onPopupClose={() => setSelectedPrefecture(null)}
+          onPopupClose={() => {
+            setSelectedPrefecture(null);
+            setPositionConfig(null);
+          }}
           isPopupOpening={isPopupOpening}
           mapRef={mapRef}
         />
@@ -271,10 +286,11 @@ const JapanMap: React.FC<JapanMapProps> = ({ className, japanData, chamaTrack })
         })}
 
         {/* Prefecture popup */}
-        {selectedPrefecture && chamaTrack && (
+        {selectedPrefecture && chamaTrack && positionConfig && (
           <PrefecturePopup
             key={`${selectedPrefecture}-${popupKey}`}
             selectedPrefecture={selectedPrefecture}
+            positionConfig={positionConfig}
             chamaTrack={chamaTrack}
             japanData={japanData}
             markerRefs={markerRefs}

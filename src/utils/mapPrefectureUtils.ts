@@ -1,9 +1,10 @@
 import React from 'react';
-import { PrefectureProperties, TrackProperties } from '@/types/map';
+import { PrefectureProperties, TrackProperties, SmartPositionConfig } from '@/types/map';
 import booleanPointInPolygon from '@turf/boolean-point-in-polygon';
 import type { Feature, FeatureCollection, Geometry, MultiPolygon, Point, Position } from 'geojson';
 import L from 'leaflet';
 import { getFeatureStyle, getHoverStyle } from './mapStyles';
+import { ViewportCalculator } from './ViewportCalculator';
 
 export function getPrefectureForPoint(
   point: Position,
@@ -38,19 +39,61 @@ function getDistance(point: Position, center: Position) {
 }
 
 export const createPrefectureHandlers = (
-  setSelectedPrefecture: (name: string) => void,
+  setSelectedPrefecture: (name: string, positionConfig: SmartPositionConfig) => void,
   isPopupOpening: React.RefObject<boolean>,
   chamaTrack?: FeatureCollection<Point, TrackProperties>
 ) => {
   return (feature: Feature<Geometry, PrefectureProperties>, layer: L.Layer) => {
     const prefectureName = feature.properties.nam;
+    const prefectureCenter = feature.properties.center;
 
     layer.on({
-      click: () => {
+      click: (e: L.LeafletMouseEvent) => {
         console.log('prefecture clicked:', prefectureName);
+
+        // Capture click position coordinates
+        const clickPosition: [number, number] = [e.latlng.lat, e.latlng.lng];
+        console.log('click position captured:', clickPosition);
+
+        // Get map instance and viewport information
+        const map = e.target._map as L.Map;
+        const viewportBounds = map.getBounds();
+
+        // Validate click position against prefecture boundaries
+        const isValidClickPosition = ViewportCalculator.validateClickPosition(
+          clickPosition,
+          prefectureCenter
+        );
+
+        // Additional validation: check if click is within prefecture boundaries
+        const clickPoint: Position = [clickPosition[1], clickPosition[0]]; // GeoJSON uses [lng, lat]
+        const isWithinPrefecture = booleanPointInPolygon(clickPoint, feature);
+
+        console.log('click position validation:', {
+          isValidClickPosition,
+          isWithinPrefecture,
+          clickPosition,
+          prefectureCenter
+        });
+
+        // Use validated click position or fall back to prefecture center
+        const finalClickPosition = (isValidClickPosition && isWithinPrefecture)
+          ? clickPosition
+          : prefectureCenter;
+
+        // Determine smart positioning based on prefecture center visibility
+        const positionConfig = ViewportCalculator.determineSmartPosition(
+          prefectureCenter,
+          finalClickPosition,
+          viewportBounds
+        );
+
+        console.log('smart position config:', positionConfig);
+
         isPopupOpening.current = true;
-        setSelectedPrefecture(prefectureName);
-        console.log('selectedPrefecture set to:', prefectureName);
+        setSelectedPrefecture(prefectureName, positionConfig);
+        console.log('selectedPrefecture set to:', prefectureName, 'with position config');
+
         // Reset flag after a short delay
         setTimeout(() => {
           isPopupOpening.current = false;
