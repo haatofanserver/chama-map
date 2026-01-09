@@ -43,50 +43,140 @@ const PrefecturePopup = ({
   useEffect(() => {
     if (!map || !positionConfig) return;
 
-    // Default popup size - these values should match the actual popup dimensions
-    const defaultPopupSize: PopupSize = {
-      width: 300,
-      height: 200
-    };
+    try {
+      // Default popup size - these values should match the actual popup dimensions
+      const defaultPopupSize: PopupSize = {
+        width: 300,
+        height: 200
+      };
 
-    let basePosition: [number, number];
+      // Get map state for enhanced positioning
+      let mapState: { zoom: number; size: { x: number; y: number } } | null = null;
+      try {
+        mapState = {
+          zoom: map.getZoom(),
+          size: map.getSize()
+        };
+        console.log('Map state for positioning:', mapState);
+      } catch (mapStateError) {
+        console.warn('Could not get map state:', mapStateError);
+      }
 
-    // Determine base position based on smart positioning logic
-    if (positionConfig.useClickPosition) {
-      // Validate click position before using it
-      const isValidClick = ViewportCalculator.validateClickPosition(
-        positionConfig.clickPosition,
-        positionConfig.prefectureCenter
-      );
+      let basePosition: [number, number];
 
-      basePosition = isValidClick ? positionConfig.clickPosition : positionConfig.prefectureCenter;
-    } else {
-      basePosition = positionConfig.prefectureCenter;
+      // Determine base position based on smart positioning logic with error handling
+      try {
+        if (positionConfig.useClickPosition) {
+          // Validate click position before using it
+          const isValidClick = ViewportCalculator.validateClickPosition(
+            positionConfig.clickPosition,
+            positionConfig.prefectureCenter
+          );
+
+          basePosition = isValidClick ? positionConfig.clickPosition : positionConfig.prefectureCenter;
+
+          if (!isValidClick) {
+            console.warn('Click position failed validation in PrefecturePopup, using prefecture center:', {
+              clickPosition: positionConfig.clickPosition,
+              prefectureCenter: positionConfig.prefectureCenter
+            });
+          }
+        } else {
+          basePosition = positionConfig.prefectureCenter;
+        }
+
+        // Validate base position
+        if (!ViewportCalculator.validateClickPosition(basePosition, positionConfig.prefectureCenter)) {
+          console.error('Base position is invalid, using prefecture center:', basePosition);
+          basePosition = positionConfig.prefectureCenter;
+        }
+      } catch (positionError) {
+        console.error('Error determining base position:', positionError);
+        basePosition = positionConfig.prefectureCenter;
+      }
+
+      // Apply enhanced position adjustment with map state awareness
+      let adjustedPos: [number, number];
+      try {
+        // Use the enhanced positioning method that considers map state
+        adjustedPos = ViewportCalculator.adjustPositionForVisibilityAndControls(
+          basePosition,
+          positionConfig.viewportBounds,
+          defaultPopupSize,
+          map
+        );
+
+        // Additional adjustment for extreme cases based on map state
+        if (mapState) {
+          adjustedPos = ViewportCalculator.applyMapStateSpecificAdjustments(
+            adjustedPos,
+            basePosition,
+            mapState,
+            positionConfig.viewportBounds
+          );
+        }
+      } catch (adjustmentError) {
+        console.error('Error adjusting position for visibility and controls:', adjustmentError);
+        // Fall back to base position without adjustments
+        adjustedPos = basePosition;
+      }
+
+      setAdjustedPosition(adjustedPos);
+
+      console.log('PrefecturePopup positioning with map state awareness:', {
+        useClickPosition: positionConfig.useClickPosition,
+        clickPosition: positionConfig.clickPosition,
+        prefectureCenter: positionConfig.prefectureCenter,
+        basePosition,
+        adjustedPosition: adjustedPos,
+        mapState,
+        controlsDetected: ViewportCalculator.getControlBounds(map).length
+      });
+
+    } catch (error) {
+      console.error('Unexpected error in PrefecturePopup positioning:', error);
+
+      // Provide graceful degradation - use prefecture center as fallback
+      try {
+        const fallbackPosition = positionConfig.prefectureCenter;
+        setAdjustedPosition(fallbackPosition);
+        console.warn('Used fallback positioning due to error:', fallbackPosition);
+      } catch (fallbackError) {
+        console.error('Even fallback positioning failed:', fallbackError);
+        // Use Tokyo coordinates as ultimate fallback
+        setAdjustedPosition([35.6762, 139.6503]);
+      }
     }
-
-    // Adjust position for viewport visibility and control collision avoidance
-    const adjustedPos = ViewportCalculator.adjustPositionForVisibilityAndControls(
-      basePosition,
-      positionConfig.viewportBounds,
-      defaultPopupSize,
-      map
-    );
-
-    setAdjustedPosition(adjustedPos);
-
-    console.log('PrefecturePopup positioning:', {
-      useClickPosition: positionConfig.useClickPosition,
-      clickPosition: positionConfig.clickPosition,
-      prefectureCenter: positionConfig.prefectureCenter,
-      basePosition,
-      adjustedPosition: adjustedPos,
-      controlsDetected: ViewportCalculator.getControlBounds(map).length
-    });
   }, [map, positionConfig, selectedPrefecture]);
 
-  // Determine final popup position
-  const popupPosition: [number, number] = adjustedPosition ||
-    (positionConfig.useClickPosition ? positionConfig.clickPosition : positionConfig.prefectureCenter);
+  // Determine final popup position with error handling
+  const popupPosition: [number, number] = (() => {
+    try {
+      if (adjustedPosition) {
+        // Validate adjusted position
+        if (ViewportCalculator.validateClickPosition(adjustedPosition, positionConfig.prefectureCenter)) {
+          return adjustedPosition;
+        } else {
+          console.warn('Adjusted position is invalid, falling back to position config');
+        }
+      }
+
+      // Fall back to position config
+      if (positionConfig.useClickPosition) {
+        const isValidClick = ViewportCalculator.validateClickPosition(
+          positionConfig.clickPosition,
+          positionConfig.prefectureCenter
+        );
+        return isValidClick ? positionConfig.clickPosition : positionConfig.prefectureCenter;
+      } else {
+        return positionConfig.prefectureCenter;
+      }
+    } catch (error) {
+      console.error('Error determining popup position:', error);
+      // Ultimate fallback to prefecture center
+      return positionConfig.prefectureCenter;
+    }
+  })();
 
   // Deduplicated groups for the selected prefecture when groupedMap is provided
   const groupedList: Feature<Point, TrackProperties>[][] | null = groupedMap

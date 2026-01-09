@@ -15,6 +15,7 @@ import { useMapRefs } from '@/hooks/useMapRefs';
 import { useGeolocation } from '@/hooks/useGeolocation';
 import { getFeatureStyle } from '@/utils/mapStyles';
 import { createPrefectureHandlers } from '@/utils/mapPrefectureUtils';
+import { ClickPositionManager } from '@/utils/ClickPositionManager';
 // import '@/lib/SmoothWheelZoom';
 import { groupMapByNameAndCoordinates } from '@/utils/groupTrackFeatures';
 import ErrorBoundary from '@/components/ui/ErrorBoundary';
@@ -228,6 +229,12 @@ const JapanMap: React.FC<JapanMapProps> = ({ className, japanData, chamaTrack })
 
         <MapEventHandler
           onPopupClose={() => {
+            // Clean up click position state when popup closes
+            if (selectedPrefecture) {
+              const clickManager = ClickPositionManager.getInstance();
+              clickManager.clearPrefecturePositions(selectedPrefecture);
+            }
+
             setSelectedPrefecture(null);
             setPositionConfig(null);
           }}

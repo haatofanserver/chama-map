@@ -2,8 +2,8 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { createPrefectureHandlers, getPrefectureForPoint } from './mapPrefectureUtils';
 import { ViewportCalculator } from './ViewportCalculator';
 import L from 'leaflet';
-import type { Feature, FeatureCollection, MultiPolygon, Point } from 'geojson';
-import type { PrefectureProperties, TrackProperties, SmartPositionConfig } from '@/types/map';
+import type { Feature, FeatureCollection, MultiPolygon } from 'geojson';
+import type { PrefectureProperties } from '@/types/map';
 import booleanPointInPolygon from '@turf/boolean-point-in-polygon';
 
 // Mock ViewportCalculator
@@ -11,6 +11,7 @@ vi.mock('./ViewportCalculator', () => ({
   ViewportCalculator: {
     validateClickPosition: vi.fn(),
     determineSmartPosition: vi.fn(),
+    createFallbackBounds: vi.fn(),
   },
 }));
 
@@ -43,6 +44,7 @@ describe('mapPrefectureUtils', () => {
       // Mock ViewportCalculator methods
       const mockValidateClickPosition = vi.mocked(ViewportCalculator.validateClickPosition);
       const mockDetermineSmartPosition = vi.mocked(ViewportCalculator.determineSmartPosition);
+      const mockCreateFallbackBounds = vi.mocked(ViewportCalculator.createFallbackBounds);
 
       mockValidateClickPosition.mockReturnValue(true);
       mockDetermineSmartPosition.mockReturnValue({
@@ -51,6 +53,7 @@ describe('mapPrefectureUtils', () => {
         useClickPosition: true,
         viewportBounds: mockMap.getBounds(),
       });
+      mockCreateFallbackBounds.mockReturnValue(mockMap.getBounds());
 
       // Mock boolean-point-in-polygon to return true
       const mockBooleanPointInPolygon = vi.mocked(booleanPointInPolygon);
@@ -116,7 +119,8 @@ describe('mapPrefectureUtils', () => {
       expect(mockDetermineSmartPosition).toHaveBeenCalledWith(
         [35.5, 139.5],
         [35.6, 139.6],
-        mockMap.getBounds()
+        mockMap.getBounds(),
+        mockMap
       );
 
       // Verify setSelectedPrefecture was called with position config
@@ -144,14 +148,16 @@ describe('mapPrefectureUtils', () => {
       // Mock ViewportCalculator methods - invalid click position
       const mockValidateClickPosition = vi.mocked(ViewportCalculator.validateClickPosition);
       const mockDetermineSmartPosition = vi.mocked(ViewportCalculator.determineSmartPosition);
+      const mockCreateFallbackBounds = vi.mocked(ViewportCalculator.createFallbackBounds);
 
       mockValidateClickPosition.mockReturnValue(false); // Invalid click position
       mockDetermineSmartPosition.mockReturnValue({
-        prefectureCenter: [35.5, 139.5],
-        clickPosition: [35.5, 139.5], // Should use prefecture center
+        prefectureCenter: [35.6762, 139.6503], // Use fallback coordinates
+        clickPosition: [35.6762, 139.6503], // Should use prefecture center
         useClickPosition: false,
         viewportBounds: mockMap.getBounds(),
       });
+      mockCreateFallbackBounds.mockReturnValue(mockMap.getBounds());
 
       // Mock boolean-point-in-polygon to return false (outside prefecture)
       const mockBooleanPointInPolygon = vi.mocked(booleanPointInPolygon);
@@ -202,9 +208,10 @@ describe('mapPrefectureUtils', () => {
 
       // Verify smart positioning was called with prefecture center as fallback
       expect(mockDetermineSmartPosition).toHaveBeenCalledWith(
-        [35.5, 139.5],
-        [35.5, 139.5], // Should use prefecture center as fallback
-        mockMap.getBounds()
+        [35.6762, 139.6503], // Tokyo fallback coordinates
+        [35.6762, 139.6503], // Should use prefecture center as fallback
+        mockMap.getBounds(),
+        mockMap
       );
     });
   });

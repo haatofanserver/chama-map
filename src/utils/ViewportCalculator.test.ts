@@ -12,6 +12,8 @@ const mockGetSize = vi.fn();
 const mockLatLngToContainerPoint = vi.fn();
 const mockContainerPointToLatLng = vi.fn();
 const mockGetContainer = vi.fn();
+const mockOn = vi.fn();
+const mockOff = vi.fn();
 
 const mockMap = {
   getBounds: mockGetBounds,
@@ -22,6 +24,8 @@ const mockMap = {
   latLngToContainerPoint: mockLatLngToContainerPoint,
   containerPointToLatLng: mockContainerPointToLatLng,
   getContainer: mockGetContainer,
+  on: mockOn,
+  off: mockOff,
 } as unknown as L.Map;
 
 // Mock LatLngBounds
@@ -68,6 +72,8 @@ describe('ViewportCalculator', () => {
       querySelectorAll: vi.fn(() => []),
       getBoundingClientRect: vi.fn(() => ({ left: 0, top: 0, right: 800, bottom: 600 })),
     });
+    mockOn.mockReturnValue(undefined);
+    mockOff.mockReturnValue(undefined);
   });
 
   afterEach(() => {
@@ -188,6 +194,7 @@ describe('ViewportCalculator', () => {
               contains: vi.fn(() => centerInViewport),
             } as unknown as L.LatLngBounds;
 
+            // Don't pass map parameter to avoid cache invalidation issues in tests
             const config = ViewportCalculator.determineSmartPosition(
               prefectureCenter,
               clickPosition,
@@ -201,6 +208,79 @@ describe('ViewportCalculator', () => {
 
             // Should use click position when center is not visible
             expect(config.useClickPosition).toBe(!centerInViewport);
+          }
+        ),
+        { numRuns: 100 }
+      );
+    });
+
+    /**
+     * Property 7: Positioning Consistency Across Map States
+     * Feature: smart-prefecture-popup-positioning, Property 7: Positioning Consistency Across Map States
+     * Validates: Requirements 3.5
+     */
+    it('should maintain consistent behavior across different zoom levels and map sizes', () => {
+      fc.assert(
+        fc.property(
+          fc.record({
+            prefectureLat: fc.double({ min: -89, max: 89, noNaN: true }),
+            prefectureLng: fc.double({ min: -179, max: 179, noNaN: true }),
+            clickLat: fc.double({ min: -89, max: 89, noNaN: true }),
+            clickLng: fc.double({ min: -179, max: 179, noNaN: true }),
+            zoom: fc.integer({ min: 1, max: 18 }),
+            width: fc.integer({ min: 100, max: 2000 }),
+            height: fc.integer({ min: 100, max: 2000 }),
+          }),
+          fc.boolean(), // whether prefecture center is in viewport
+          (testData, centerInViewport) => {
+            const prefectureCenter: [number, number] = [testData.prefectureLat, testData.prefectureLng];
+            const clickPosition: [number, number] = [testData.clickLat, testData.clickLng];
+
+            const testBounds = {
+              contains: vi.fn(() => centerInViewport),
+              getCenter: vi.fn(() => ({ lat: testData.prefectureLat, lng: testData.prefectureLng })),
+            } as unknown as L.LatLngBounds;
+
+            // Mock map with different states - include all required methods
+            const testMap = {
+              getZoom: vi.fn(() => testData.zoom),
+              getSize: vi.fn(() => ({ x: testData.width, y: testData.height })),
+              getCenter: vi.fn(() => ({ lat: testData.prefectureLat, lng: testData.prefectureLng })),
+              getBounds: vi.fn(() => testBounds),
+              getPixelBounds: vi.fn(() => mockBounds),
+            } as unknown as L.Map;
+
+            const config = ViewportCalculator.determineSmartPosition(
+              prefectureCenter,
+              clickPosition,
+              testBounds,
+              testMap
+            );
+
+            // Basic positioning logic should be consistent
+            expect(config.prefectureCenter).toEqual(prefectureCenter);
+            expect(config.clickPosition).toEqual(clickPosition);
+            expect(config.viewportBounds).toBe(testBounds);
+
+            // For extreme zoom levels, positioning logic should adapt
+            if (testData.zoom >= 16 || testData.zoom <= 4) {
+              // Extreme zoom levels should have special handling
+              // but still follow basic visibility rules
+              if (centerInViewport) {
+                expect(config.useClickPosition).toBe(false);
+              }
+            } else {
+              // Normal zoom levels should follow standard logic
+              expect(config.useClickPosition).toBe(!centerInViewport);
+            }
+
+            // For small viewports, should prioritize visibility
+            const isSmallViewport = testData.width < 480 || testData.height < 480 || (testData.width * testData.height) < 300000;
+            if (isSmallViewport) {
+              // Small viewports should prioritize visibility over exact positioning
+              // The decision should still be based on center visibility
+              expect(config.useClickPosition).toBe(!centerInViewport);
+            }
           }
         ),
         { numRuns: 100 }
@@ -354,6 +434,133 @@ describe('ViewportCalculator', () => {
 
       // Should not throw errors
       expect(() => ViewportCalculator.clearCache()).not.toThrow();
+    });
+
+    it('should provide cache statistics', () => {
+      // Get viewport info to populate cache
+      ViewportCalculator.getViewportInfo(mockMap);
+
+      const stats = ViewportCalculator.getCacheStats();
+
+      expect(stats).toHaveProperty('hits');
+      expect(stats).toHaveProperty('misses');
+      expect(stats).toHaveProperty('evictions');
+      expect(stats).toHaveProperty('size');
+      expect(typeof stats.hits).toBe('number');
+      expect(typeof stats.misses).toBe('number');
+      expect(typeof stats.evictions).toBe('number');
+      expect(typeof stats.size).toBe('number');
+    });
+
+    it('should handle selective cache clearing', () => {
+      // Get viewport info to populate cache
+      ViewportCalculator.getViewportInfo(mockMap);
+
+      // Clear cache selectively
+      ViewportCalculator.clearCache(true);
+
+      // Should not throw errors
+      expect(() => ViewportCalculator.clearCache(true)).not.toThrow();
+    });
+
+    it('should setup automatic cache invalidation', () => {
+      const cleanup = ViewportCalculator.setupAutomaticCacheInvalidation(mockMap);
+
+      expect(typeof cleanup).toBe('function');
+
+      // Should not throw when calling cleanup
+      expect(() => cleanup()).not.toThrow();
+    });
+
+    it('should preload cache without errors', () => {
+      const commonPositions: [number, number][] = [
+        [35.6762, 139.6503], // Tokyo
+        [34.6937, 135.5023], // Osaka
+      ];
+
+      // Mock setView method
+      const mockSetView = vi.fn();
+      (mockMap as any).setView = mockSetView;
+
+      expect(() => {
+        ViewportCalculator.preloadCache(mockMap, commonPositions);
+      }).not.toThrow();
+    });
+
+    /**
+     * Property 9: Viewport Calculation Caching
+     * Feature: smart-prefecture-popup-positioning, Property 9: Viewport Calculation Caching
+     * Validates: Requirements 5.3
+     */
+    it('should cache repeated viewport calculations with identical map states', () => {
+      fc.assert(
+        fc.property(
+          fc.record({
+            lat: fc.double({ min: -89, max: 89, noNaN: true }),
+            lng: fc.double({ min: -179, max: 179, noNaN: true }),
+            zoom: fc.integer({ min: 1, max: 18 }),
+            width: fc.integer({ min: 100, max: 2000 }),
+            height: fc.integer({ min: 100, max: 2000 }),
+          }),
+          (mapState) => {
+            // Clear cache and stats
+            ViewportCalculator.clearCache();
+
+            // Setup consistent mock returns for identical map state
+            const testLatLng = { lat: mapState.lat, lng: mapState.lng } as L.LatLng;
+            const testBounds = {
+              contains: vi.fn(),
+              getSouth: vi.fn(() => mapState.lat - 1),
+              getNorth: vi.fn(() => mapState.lat + 1),
+              getWest: vi.fn(() => mapState.lng - 1),
+              getEast: vi.fn(() => mapState.lng + 1),
+            } as unknown as L.LatLngBounds;
+
+            mockGetCenter.mockReturnValue(testLatLng);
+            mockGetZoom.mockReturnValue(mapState.zoom);
+            mockGetBounds.mockReturnValue(testBounds);
+            mockGetSize.mockReturnValue({ x: mapState.width, y: mapState.height });
+
+            // First call should be a cache miss
+            const firstResult = ViewportCalculator.getViewportInfo(mockMap);
+            const statsAfterFirst = ViewportCalculator.getCacheStats();
+
+            expect(statsAfterFirst.misses).toBeGreaterThan(0);
+            expect(firstResult).toHaveProperty('bounds');
+            expect(firstResult).toHaveProperty('center');
+            expect(firstResult).toHaveProperty('zoom');
+
+            // Second call with identical state should be a cache hit
+            const secondResult = ViewportCalculator.getViewportInfo(mockMap);
+            const statsAfterSecond = ViewportCalculator.getCacheStats();
+
+            expect(statsAfterSecond.hits).toBeGreaterThan(0);
+            expect(secondResult).toEqual(firstResult);
+
+            // Cache should contain the entry
+            expect(statsAfterSecond.size).toBeGreaterThan(0);
+          }
+        ),
+        { numRuns: 50 } // Reduced runs for performance
+      );
+    });
+
+    it('should handle mobile device optimization', () => {
+      // Mock mobile device
+      mockGetSize.mockReturnValue({ x: 400, y: 600 }); // Mobile size
+
+      expect(() => {
+        ViewportCalculator.optimizeForMobile(mockMap);
+      }).not.toThrow();
+    });
+
+    it('should invalidate cache on map state changes', () => {
+      // Get initial viewport info
+      ViewportCalculator.getViewportInfo(mockMap);
+
+      expect(() => {
+        ViewportCalculator.invalidateCacheOnMapStateChange(mockMap);
+      }).not.toThrow();
     });
   });
 });

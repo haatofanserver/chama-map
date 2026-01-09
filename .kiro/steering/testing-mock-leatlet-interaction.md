@@ -996,3 +996,7 @@ This comprehensive mocking strategy ensures reliable, fast, and maintainable tes
 ## Running testing
 
 No need to add '-- --run' after npm test e.g. `npm test ReturnToJapanButton.test.tsx` instead of `npm test -- --run ReturnToJapanButton.test.tsx`
+
+## Feedback to this Steering
+
+When finding a test failed because of mocking, or a new type of mocking is required, write back to this steering for future reference.
