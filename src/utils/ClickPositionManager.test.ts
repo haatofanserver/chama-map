@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { ClickPositionManager, type ClickPositionState } from './ClickPositionManager';
+import { ClickPositionManager } from './ClickPositionManager';
 
 describe('ClickPositionManager', () => {
   let manager: ClickPositionManager;

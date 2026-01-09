@@ -1,6 +1,6 @@
 import React from 'react';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { render, fireEvent, waitFor, act } from '@testing-library/react';
+import { render, waitFor, act } from '@testing-library/react';
 import JapanMap from './JapanMap';
 import type { FeatureCollection, Point, MultiPolygon } from 'geojson';
 import type { TrackProperties, PrefectureProperties } from '@/types/map';
@@ -729,7 +729,7 @@ describe('Smart Prefecture Popup Positioning Integration Tests', () => {
       { latlng: { lat: 35.72, lng: 139.72 } },
     ];
 
-    clickEvents.forEach((clickEvent, index) => {
+    clickEvents.forEach((clickEvent, _index) => {
       const mockEvent = {
         ...clickEvent,
         target: {
