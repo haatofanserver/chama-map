@@ -23,11 +23,40 @@ import { getChamaTrack, getJapanPrefectures } from '@/services/api';
 // Lazy load the map component
 const JapanMap = React.lazy(() => import('@/components/map/JapanMap'));
 
+// Hook to handle dynamic viewport height for mobile browsers
+function useViewportHeight() {
+  useEffect(() => {
+    const setVH = () => {
+      const vh = window.innerHeight * 0.01;
+      document.documentElement.style.setProperty('--vh', `${vh}px`);
+    };
+
+    // Set initial value
+    setVH();
+
+    // Update on resize and orientation change
+    window.addEventListener('resize', setVH);
+    window.addEventListener('orientationchange', () => {
+      // Delay to account for browser UI animation
+      setTimeout(setVH, 100);
+    });
+
+    // Cleanup
+    return () => {
+      window.removeEventListener('resize', setVH);
+      window.removeEventListener('orientationchange', setVH);
+    };
+  }, []);
+}
+
 function AppContent() {
   const [infoOpen, setInfoOpen] = useState(false);
   const [showSplash, setShowSplash] = useState(true);
   const [japanData, setJapanData] = useState<FeatureCollection<MultiPolygon, PrefectureProperties> | null>(null);
   const [chamaTrack, setChamaTrack] = useState<FeatureCollection<Point, TrackProperties> | null>(null);
+
+  // Handle dynamic viewport height for mobile browsers
+  useViewportHeight();
 
   useEffect(() => {
     let splashTimeout: ReturnType<typeof setTimeout>;
@@ -44,7 +73,7 @@ function AppContent() {
   }, []);
 
   return (
-    <div className="min-h-screen min-w-screen w-screen h-screen fixed top-0 left-0 bg-gradient-to-br from-blue-50 to-purple-50">
+    <div className="app-container bg-gradient-to-br from-blue-50 to-purple-50">
       <DynamicMetadata />
       <AnimatePresence>{showSplash && <SplashScreen key="splash" />}</AnimatePresence>
       {!showSplash && japanData && chamaTrack && (
