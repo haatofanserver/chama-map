@@ -7,6 +7,14 @@ import JapanMap from './JapanMap';
 import type { FeatureCollection, Point, MultiPolygon } from 'geojson';
 import type { TrackProperties, PrefectureProperties } from '@/types/map';
 
+vi.mock('./BasemapTileLayer', () => ({
+  default: ({ useJapaneseSource }: { useJapaneseSource: boolean }) =>
+    React.createElement('div', {
+      'data-testid': 'tile-layer',
+      'data-use-japanese-source': String(useJapaneseSource),
+    }),
+}));
+
 // Mock Leaflet and React Leaflet with comprehensive setup
 vi.mock('leaflet', () => ({
   default: {

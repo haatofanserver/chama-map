@@ -8,6 +8,14 @@ import type { UserGeolocationPosition, GeolocationErrorType } from '@/types/geol
 import { I18nextProvider } from 'react-i18next';
 import i18n from '@/lib/i18n';
 
+vi.mock('./BasemapTileLayer', () => ({
+  default: ({ useJapaneseSource }: { useJapaneseSource: boolean }) =>
+    React.createElement('div', {
+      'data-testid': 'tile-layer',
+      'data-use-japanese-source': String(useJapaneseSource),
+    }),
+}));
+
 // Mock Leaflet and React Leaflet
 const mockFlyTo = vi.fn();
 const mockGetZoom = vi.fn(() => 10);

@@ -7,6 +7,14 @@ import type { TrackProperties, PrefectureProperties } from '@/types/map';
 import { I18nextProvider } from 'react-i18next';
 import i18n from '@/lib/i18n';
 
+vi.mock('./BasemapTileLayer', () => ({
+  default: ({ useJapaneseSource }: { useJapaneseSource: boolean }) =>
+    React.createElement('div', {
+      'data-testid': 'tile-layer',
+      'data-use-japanese-source': String(useJapaneseSource),
+    }),
+}));
+
 // Mock all external dependencies for focused integration testing
 vi.mock('leaflet', () => ({
   default: {

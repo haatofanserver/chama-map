@@ -1,5 +1,5 @@
 import React, { useCallback, useLayoutEffect, useMemo, useRef, useState } from 'react';
-import { MapContainer, TileLayer, GeoJSON, ZoomControl } from 'react-leaflet';
+import { MapContainer, GeoJSON, ZoomControl } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 import type { FeatureCollection, Point, MultiPolygon } from 'geojson';
@@ -10,6 +10,7 @@ import MapStyles from './MapStyles';
 import CurrentPositionMarker from './CurrentPositionMarker';
 import GPSControlButton from './GPSControlButton';
 import ReturnToJapanButton from './ReturnToJapanButton';
+import BasemapTileLayer from './BasemapTileLayer';
 import { TrackProperties, PrefectureProperties, SmartPositionConfig } from '@/types/map';
 import { useMapRefs } from '@/hooks/useMapRefs';
 import { useGeolocation } from '@/hooks/useGeolocation';
@@ -251,18 +252,7 @@ const JapanMap: React.FC<JapanMapProps> = ({ className, japanData, chamaTrack })
           mapRef={mapRef}
         />
 
-        {!i18n.language.startsWith('ja') ? (
-          <TileLayer
-            url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
-            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
-          />
-        ) : (
-          <TileLayer
-            url="https://cyberjapandata.gsi.go.jp/xyz/pale/{z}/{x}/{y}.png"
-            attribution='出典: <a href="https://maps.gsi.go.jp/development/ichiran.html" target="_blank" rel="noreferrer">国土地理院（地理院タイル）</a>'
-          // updateWhenZooming={false}
-          />
-        )}
+        <BasemapTileLayer useJapaneseSource={i18n.language.startsWith('ja')} />
 
         {japanData && (
           <GeoJSON
