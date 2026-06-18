@@ -101,8 +101,8 @@ export async function getChamaTrack(): Promise<FeatureCollection<Point, TrackPro
       // - If ExtendedData has both name and name_jp, the folder uses "name" as display field.
       //   Save as: name = ExtendedData.name, nameJp = ExtendedData.name_jp.
       // - Otherwise, outer <name> is actually Japanese display: nameJp = outerName, name = ExtendedData.name (if any).
-      let name = '';
-      let nameJp = '';
+      let name: string;
+      let nameJp: string;
       if (dataMap['name'] && dataMap['name_jp']) {
         name = dataMap['name'];
         nameJp = dataMap['name_jp'];

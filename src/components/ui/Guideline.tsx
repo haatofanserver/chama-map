@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import useCookie from 'react-use-cookie';
 import { motion } from 'framer-motion';
 import { AnimatePresence } from 'framer-motion';
@@ -8,39 +8,30 @@ import { useAppDispatch, useAppSelector } from '@/lib/hooks';
 import { hideGuideline } from '@/lib/slices/guidelineSlice';
 
 export default function Guideline() {
-  const [isVisible, setIsVisible] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
   const [tosAccepted, setTosAccepted] = useCookie('tosAccepted', 'false');
+  const [dismissed, setDismissed] = useState(false);
   const { t } = useTranslation();
   const isVisibleState = useAppSelector((state) => state.guideline.isVisible);
   const dispatch = useAppDispatch();
 
-  useEffect(() => {
-    if (tosAccepted === 'false') {
-      setIsVisible(true);
-    }
-
-    setIsLoading(false);
-  }, [tosAccepted]);
+  const showTosPrompt = tosAccepted === 'false' && !dismissed;
+  const isShow = showTosPrompt || isVisibleState;
 
   const handleAccept = () => {
-    // Set cookie to remember user's acceptance
     setTosAccepted('true', { days: 365 });
-    setIsVisible(false);
+    setDismissed(true);
   };
 
   const handleDecline = () => {
-    // Redirect to Google
     window.location.href = 'https://www.google.com';
   };
 
   const handleBackdropClick = (e: React.MouseEvent) => {
-    // Only allow backdrop click when in isVisibleState (programmatically shown)
     if (isVisibleState && e.target === e.currentTarget) {
       dispatch(hideGuideline());
     }
   };
-  const isShow = isLoading || isVisible || isVisibleState;
+
   return (
     <AnimatePresence>
       {isShow && (
@@ -51,13 +42,10 @@ export default function Guideline() {
           transition={{ duration: 0.4, ease: 'easeInOut' }}
           className="fixed inset-0 z-[10002] flex items-center justify-center"
         >
-          {/* Full-screen modal backdrop */}
           <div className="fixed inset-0 bg-[rgba(0,0,0,0.6)]" onClick={handleBackdropClick} />
 
-          {/* Modal content */}
           <div className="relative z-10 flex items-center justify-center p-8">
             <div className="bg-white rounded-lg shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden">
-              {/* Header */}
               <div className="bg-gray-50/80 px-6 py-4 border-b border-gray-200/50">
                 <h2 className="text-2xl font-semibold text-gray-800 text-center">{t('guideline.title')}</h2>
               </div>
@@ -124,7 +112,6 @@ export default function Guideline() {
                 </div>
               </div>
 
-              {/* Footer with buttons */}
               <div className="bg-gray-50/80 px-6 py-4 border-t border-gray-200/50 flex justify-center space-x-4">
                 {isVisibleState ? (
                   <button className="block w-full text-gray-700" onClick={() => dispatch(hideGuideline())}>

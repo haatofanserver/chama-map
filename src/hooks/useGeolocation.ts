@@ -18,7 +18,7 @@ export const useGeolocation = (
   const watchIdRef = useRef<number | null>(null);
   const inactivityTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const backgroundTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const lastActivityRef = useRef<number>(Date.now());
+  const lastActivityRef = useRef<number>(0);
   const isActiveRef = useRef(true);
   const isUserInteractingRef = useRef(false);
 
@@ -114,6 +114,8 @@ export const useGeolocation = (
     setIsLoading(false);
   }, []);
 
+  const watchPositionRef = useRef<() => void>(() => {});
+
   // Start watching position with configurable intervals
   const watchPosition = useCallback(() => {
     if (!navigator.geolocation) {
@@ -159,8 +161,7 @@ export const useGeolocation = (
       if (!isActiveRef.current) {
         backgroundTimerRef.current = setTimeout(() => {
           if (!isActiveRef.current && watchIdRef.current !== null) {
-            // Restart with background options
-            watchPosition();
+            watchPositionRef.current();
           }
         }, mergedOptions.backgroundUpdateInterval);
       }
@@ -170,6 +171,10 @@ export const useGeolocation = (
     setupBackgroundTimer();
     lastActivityRef.current = Date.now();
   }, [getCurrentOptions, handleSuccess, handleError, stopWatching, mergedOptions.inactivityTimeout, mergedOptions.backgroundUpdateInterval]);
+
+  useEffect(() => {
+    watchPositionRef.current = watchPosition;
+  }, [watchPosition]);
 
   // Request single position
   const requestLocation = useCallback(() => {

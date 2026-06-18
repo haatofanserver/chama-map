@@ -15,15 +15,26 @@ export default defineConfig({
     outDir: 'dist',
     assetsDir: 'assets',
     sourcemap: false,
-    rollupOptions: {
+    rolldownOptions: {
       output: {
-        manualChunks: {
-          vendor: ['react', 'react-dom'],
-          leaflet: ['leaflet', 'react-leaflet'],
-          redux: ['@reduxjs/toolkit', 'react-redux'],
-          i18n: ['i18next', 'react-i18next', 'i18next-browser-languagedetector'],
-          motion: ['framer-motion'],
-          utils: ['@turf/boolean-point-in-polygon', 'fflate', '@xmldom/xmldom', 'striptags'],
+        strictExecutionOrder: true,
+        codeSplitting: {
+          groups: [
+            { name: 'vendor', test: /node_modules[\\/](react|react-dom)[\\/]/, priority: 30 },
+            { name: 'leaflet', test: /node_modules[\\/](leaflet|react-leaflet)[\\/]/, priority: 25 },
+            { name: 'redux', test: /node_modules[\\/](@reduxjs\/toolkit|react-redux)[\\/]/, priority: 20 },
+            {
+              name: 'i18n',
+              test: /node_modules[\\/](i18next|react-i18next|i18next-browser-languagedetector)[\\/]/,
+              priority: 20,
+            },
+            { name: 'motion', test: /node_modules[\\/]framer-motion[\\/]/, priority: 15 },
+            {
+              name: 'utils',
+              test: /node_modules[\\/](@turf\/boolean-point-in-polygon|fflate|@xmldom\/xmldom|striptags)[\\/]/,
+              priority: 15,
+            },
+          ],
         },
       },
     },

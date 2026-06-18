@@ -1,8 +1,5 @@
-/* stylelint-disable at-rule-no-unknown */
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
-/* stylelint-enable at-rule-no-unknown */
+@import 'tailwindcss';
+@config '../../tailwind.config.js';
 
 /* Font variables for Geist fonts */
 :root {

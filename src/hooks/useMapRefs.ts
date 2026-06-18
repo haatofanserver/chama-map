@@ -1,12 +1,26 @@
-import React, { useRef } from 'react';
+import React, { useMemo, useRef } from 'react';
 import L from 'leaflet';
 import type { TrackMarkerHandle } from '../components/map/TrackMarker';
+import type { PopupOpeningControl } from '@/types/map';
 
 export const useMapRefs = () => {
   const markerRefs = useRef<Record<string, React.RefObject<TrackMarkerHandle | null>[]>>({});
   const popupRef = useRef<L.Popup | null>(null);
   const mapRef = useRef<L.Map | null>(null);
-  const isPopupOpening = useRef<boolean>(false);
+  const isPopupOpeningRef = useRef(false);
+
+  const popupOpening = useMemo<PopupOpeningControl>(
+    () => ({
+      markOpening: () => {
+        isPopupOpeningRef.current = true;
+      },
+      markClosed: () => {
+        isPopupOpeningRef.current = false;
+      },
+      isOpening: () => isPopupOpeningRef.current,
+    }),
+    []
+  );
 
   const registerMarkerRef = (prefName: string, idx: number) => {
     if (!markerRefs.current[prefName]) markerRefs.current[prefName] = [];
@@ -20,7 +34,7 @@ export const useMapRefs = () => {
     markerRefs,
     popupRef,
     mapRef,
-    isPopupOpening,
-    registerMarkerRef
+    popupOpening,
+    registerMarkerRef,
   };
 };

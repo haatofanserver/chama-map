@@ -373,10 +373,9 @@ const ReturnToJapanButton: React.FC<ReturnToJapanButtonProps> = ({
   useEffect(() => {
     if (!map) return;
 
-    let control: ReturnToJapanControl | null = null;
+    let control: ReturnToJapanControl;
 
     try {
-      // Create and add the control
       control = new ReturnToJapanControl(
         handleReturnToJapan,
         isAnimating,

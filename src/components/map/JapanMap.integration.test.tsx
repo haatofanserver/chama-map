@@ -146,7 +146,11 @@ vi.mock('@/hooks/useMapRefs', () => ({
     markerRefs: { current: {} },
     popupRef: { current: null },
     mapRef: { current: null },
-    isPopupOpening: { current: false },
+    popupOpening: {
+      markOpening: () => {},
+      markClosed: () => {},
+      isOpening: () => false,
+    },
     registerMarkerRef: vi.fn(() => ({ current: null })),
   }),
 }));

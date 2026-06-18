@@ -1,12 +1,8 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 
-export default function Image({ src, alt, className }: { src: string; alt?: string; className?: string }) {
+function ImageContent({ src, alt, className }: { src: string; alt?: string; className?: string }) {
   const [isLoading, setIsLoading] = useState(true);
   const [isError, setIsError] = useState(false);
-  useEffect(() => {
-    setIsLoading(true);
-    setIsError(false);
-  }, [src]);
 
   return (
     !isError && (
@@ -27,4 +23,8 @@ export default function Image({ src, alt, className }: { src: string; alt?: stri
       </div>
     )
   );
+}
+
+export default function Image({ src, alt, className }: { src: string; alt?: string; className?: string }) {
+  return <ImageContent key={src} src={src} alt={alt} className={className} />;
 }

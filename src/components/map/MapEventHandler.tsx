@@ -2,20 +2,33 @@ import React, { useEffect } from 'react';
 import { useMapEvents } from 'react-leaflet';
 import L from 'leaflet';
 import type { PopupEvent } from 'leaflet';
+import type { PopupOpeningControl } from '@/types/map';
+import { normalizeLongitude } from '@/constants/japanMapConstants';
 
 interface MapEventHandlerProps {
   onPopupClose: () => void;
-  isPopupOpening: React.RefObject<boolean>;
+  popupOpening: PopupOpeningControl;
   mapRef: React.RefObject<L.Map | null>;
 }
 
-const MapEventHandler = ({ onPopupClose, isPopupOpening, mapRef }: MapEventHandlerProps) => {
+const wrapMapCenterToCanonicalLongitude = (map: L.Map): void => {
+  const center = map.getCenter();
+  const wrappedLng = normalizeLongitude(center.lng);
+  if (wrappedLng !== center.lng) {
+    map.setView([center.lat, wrappedLng], map.getZoom(), { animate: false });
+  }
+};
+
+const MapEventHandler = ({ onPopupClose, popupOpening, mapRef }: MapEventHandlerProps) => {
   const map = useMapEvents({
+    moveend: () => {
+      wrapMapCenterToCanonicalLongitude(map);
+    },
     popupclose: (e: PopupEvent) => {
       console.log('popup closed via map event', e);
-      console.log('isPopupOpening:', isPopupOpening.current);
+      console.log('isPopupOpening:', popupOpening.isOpening());
       // Only close if it's not during popup opening
-      if (!isPopupOpening.current) {
+      if (!popupOpening.isOpening()) {
         console.log('closing prefecture popup');
         onPopupClose();
       } else {

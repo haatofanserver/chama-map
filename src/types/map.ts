@@ -1,5 +1,11 @@
 import L from 'leaflet';
 
+export interface PopupOpeningControl {
+  markOpening: () => void;
+  markClosed: () => void;
+  isOpening: () => boolean;
+}
+
 export interface PrefectureProperties {
   nam: string;
   nam_ja: string;

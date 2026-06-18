@@ -3,7 +3,7 @@ import { createPrefectureHandlers, getPrefectureForPoint } from './mapPrefecture
 import { ViewportCalculator } from './ViewportCalculator';
 import L from 'leaflet';
 import type { Feature, FeatureCollection, MultiPolygon } from 'geojson';
-import type { PrefectureProperties } from '@/types/map';
+import type { PrefectureProperties, PopupOpeningControl } from '@/types/map';
 import booleanPointInPolygon from '@turf/boolean-point-in-polygon';
 
 // Mock ViewportCalculator
@@ -27,6 +27,20 @@ vi.mock('@turf/boolean-point-in-polygon', () => ({
   default: vi.fn(),
 }));
 
+function createMockPopupOpening() {
+  let opening = false;
+  const control: PopupOpeningControl = {
+    markOpening: () => {
+      opening = true;
+    },
+    markClosed: () => {
+      opening = false;
+    },
+    isOpening: () => opening,
+  };
+  return { control, getOpening: () => opening };
+}
+
 describe('mapPrefectureUtils', () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -36,7 +50,7 @@ describe('mapPrefectureUtils', () => {
     it('should create handlers that capture click positions and implement smart positioning', () => {
       // Mock dependencies
       const mockSetSelectedPrefecture = vi.fn();
-      const mockIsPopupOpening = { current: false };
+      const { control: mockPopupOpening, getOpening } = createMockPopupOpening();
       const mockMap = {
         getBounds: vi.fn().mockReturnValue(new L.LatLngBounds([35, 139], [36, 140])),
       };
@@ -82,7 +96,7 @@ describe('mapPrefectureUtils', () => {
       // Create handlers
       const handlers = createPrefectureHandlers(
         mockSetSelectedPrefecture,
-        mockIsPopupOpening,
+        mockPopupOpening,
         undefined
       );
 
@@ -134,13 +148,13 @@ describe('mapPrefectureUtils', () => {
       );
 
       // Verify popup opening flag was set
-      expect(mockIsPopupOpening.current).toBe(true);
+      expect(getOpening()).toBe(true);
     });
 
     it('should fall back to prefecture center when click position is invalid', () => {
       // Mock dependencies
       const mockSetSelectedPrefecture = vi.fn();
-      const mockIsPopupOpening = { current: false };
+      const { control: mockPopupOpening, getOpening } = createMockPopupOpening();
       const mockMap = {
         getBounds: vi.fn().mockReturnValue(new L.LatLngBounds([35, 139], [36, 140])),
       };
@@ -186,7 +200,7 @@ describe('mapPrefectureUtils', () => {
       // Create handlers
       const handlers = createPrefectureHandlers(
         mockSetSelectedPrefecture,
-        mockIsPopupOpening,
+        mockPopupOpening,
         undefined
       );
 

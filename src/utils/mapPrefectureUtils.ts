@@ -1,5 +1,4 @@
-import React from 'react';
-import { PrefectureProperties, TrackProperties, SmartPositionConfig } from '@/types/map';
+import { PrefectureProperties, TrackProperties, SmartPositionConfig, PopupOpeningControl } from '@/types/map';
 import booleanPointInPolygon from '@turf/boolean-point-in-polygon';
 import type { Feature, FeatureCollection, Geometry, MultiPolygon, Point, Position } from 'geojson';
 import L from 'leaflet';
@@ -415,21 +414,21 @@ function setSelectedPrefectureWithErrorHandling(
   prefectureName: string,
   positionConfig: SmartPositionConfig,
   setSelectedPrefecture: (name: string, positionConfig: SmartPositionConfig) => void,
-  isPopupOpening: React.RefObject<boolean>
+  isPopupOpening: PopupOpeningControl
 ): void {
   try {
-    isPopupOpening.current = true;
+    isPopupOpening.markOpening();
     setSelectedPrefecture(prefectureName, positionConfig);
     console.log('selectedPrefecture set to:', prefectureName, 'with enhanced position config');
 
     // Reset flag after a short delay
     setTimeout(() => {
-      isPopupOpening.current = false;
+      isPopupOpening.markClosed();
     }, 500);
   } catch (setError) {
     console.error('Error setting selected prefecture:', setError);
     // Ensure flag is reset even on error
-    isPopupOpening.current = false;
+    isPopupOpening.markClosed();
   }
 }
 
@@ -440,7 +439,7 @@ function emergencyFallback(
   prefectureName: string,
   prefectureCenter: [number, number],
   setSelectedPrefecture: (name: string, positionConfig: SmartPositionConfig) => void,
-  isPopupOpening: React.RefObject<boolean>
+  isPopupOpening: PopupOpeningControl
 ): void {
   try {
     const fallbackConfig: SmartPositionConfig = {
@@ -450,16 +449,16 @@ function emergencyFallback(
       viewportBounds: ViewportCalculator.createFallbackBounds(prefectureCenter)
     };
 
-    isPopupOpening.current = true;
+    isPopupOpening.markOpening();
     setSelectedPrefecture(prefectureName, fallbackConfig);
     console.warn('Used emergency fallback for prefecture selection');
 
     setTimeout(() => {
-      isPopupOpening.current = false;
+      isPopupOpening.markClosed();
     }, 500);
   } catch (fallbackError) {
     console.error('Emergency fallback also failed:', fallbackError);
-    isPopupOpening.current = false;
+    isPopupOpening.markClosed();
   }
 }
 
@@ -471,7 +470,7 @@ function handlePrefectureClick(
   prefectureName: string,
   feature: Feature<Geometry, PrefectureProperties>,
   setSelectedPrefecture: (name: string, positionConfig: SmartPositionConfig) => void,
-  isPopupOpening: React.RefObject<boolean>,
+  isPopupOpening: PopupOpeningControl,
   clickManager: ClickPositionManager
 ): void {
   try {
@@ -535,7 +534,7 @@ function handlePrefectureClick(
 
 export const createPrefectureHandlers = (
   setSelectedPrefecture: (name: string, positionConfig: SmartPositionConfig) => void,
-  isPopupOpening: React.RefObject<boolean>,
+  isPopupOpening: PopupOpeningControl,
   chamaTrack?: FeatureCollection<Point, TrackProperties>
 ) => {
   const clickManager = ClickPositionManager.getInstance();

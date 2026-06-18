@@ -57,6 +57,10 @@ export const getOptimalAnimationDuration = (): number => {
     : PERFORMANCE_CONFIG.DESKTOP_ANIMATION_DURATION;
 };
 
+/** Wrap longitude to [-180, 180] so vector layers align with wrapped tile copies */
+export const normalizeLongitude = (lng: number): number =>
+  ((lng + 180) % 360 + 360) % 360 - 180;
+
 // Utility function to check if the current map view is close to Japan's default view
 export const isMapAtJapanView = (map: L.Map, tolerance = 0.1): boolean => {
   const center = map.getCenter();

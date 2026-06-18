@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useCallback, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { MapContainer, TileLayer, GeoJSON, ZoomControl } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
@@ -41,7 +41,7 @@ const JapanMap: React.FC<JapanMapProps> = ({ className, japanData, chamaTrack })
   const [positionConfig, setPositionConfig] = useState<SmartPositionConfig | null>(null);
   const [popupKey, setPopupKey] = useState<number>(0);
   const [isAnimatingToJapan, setIsAnimatingToJapan] = useState<boolean>(false);
-  const { markerRefs, popupRef, mapRef, isPopupOpening, registerMarkerRef } = useMapRefs();
+  const { markerRefs, popupRef, mapRef, popupOpening, registerMarkerRef } = useMapRefs();
   const { i18n, t } = useTranslation();
 
   // Initialize geolocation hook
@@ -131,41 +131,49 @@ const JapanMap: React.FC<JapanMapProps> = ({ className, japanData, chamaTrack })
     }
   };
 
-  // Create prefecture interaction handlers
-  const onEachFeature = createPrefectureHandlers(
-    (name: string, smartPositionConfig: SmartPositionConfig) => {
-      console.log('Prefecture handler called:', name, smartPositionConfig);
+  const onEachFeatureRef = useRef<ReturnType<typeof createPrefectureHandlers> | null>(null);
 
-      // If only one grouped track exists in this prefecture, open it directly
-      const groupsForPrefecture = Object.values(groupedChamaTracks).filter(
-        (group) => group.length > 0 && group[0].properties.prefecture === name
-      );
-      if (groupsForPrefecture.length === 1) {
-        const rep = groupsForPrefecture[0][0];
-        const originalIdx = chamaTrack.features.findIndex((f1) => f1 === rep);
-        const ref = markerRefs.current[name]?.[originalIdx];
-        if (ref && ref.current) {
-          setTimeout(() => {
-            ref.current?.openPopup();
-          }, 0);
+  useLayoutEffect(() => {
+    onEachFeatureRef.current = createPrefectureHandlers(
+      (name: string, smartPositionConfig: SmartPositionConfig) => {
+        console.log('Prefecture handler called:', name, smartPositionConfig);
+
+        const groupsForPrefecture = Object.values(groupedChamaTracks).filter(
+          (group) => group.length > 0 && group[0].properties.prefecture === name
+        );
+        if (groupsForPrefecture.length === 1) {
+          const rep = groupsForPrefecture[0][0];
+          const originalIdx = chamaTrack.features.findIndex((f1) => f1 === rep);
+          const ref = markerRefs.current[name]?.[originalIdx];
+          if (ref && ref.current) {
+            setTimeout(() => {
+              ref.current?.openPopup();
+            }, 0);
+          }
+          return;
         }
-        return;
-      }
 
-      // Otherwise show prefecture list popup with smart positioning
-      console.log('Setting prefecture popup with smart positioning:', {
-        prefecture: name,
-        useClickPosition: smartPositionConfig.useClickPosition,
-        clickPosition: smartPositionConfig.clickPosition,
-        prefectureCenter: smartPositionConfig.prefectureCenter
-      });
+        console.log('Setting prefecture popup with smart positioning:', {
+          prefecture: name,
+          useClickPosition: smartPositionConfig.useClickPosition,
+          clickPosition: smartPositionConfig.clickPosition,
+          prefectureCenter: smartPositionConfig.prefectureCenter
+        });
 
-      setPopupKey((prev) => prev + 1);
-      setSelectedPrefecture(name);
-      setPositionConfig(smartPositionConfig);
+        setPopupKey((prev) => prev + 1);
+        setSelectedPrefecture(name);
+        setPositionConfig(smartPositionConfig);
+      },
+      popupOpening,
+      chamaTrack
+    );
+  }, [groupedChamaTracks, chamaTrack, popupOpening, markerRefs]);
+
+  const onEachFeature = useCallback(
+    (feature: Parameters<NonNullable<typeof onEachFeatureRef.current>>[0], layer: Parameters<NonNullable<typeof onEachFeatureRef.current>>[1]) => {
+      onEachFeatureRef.current?.(feature, layer);
     },
-    isPopupOpening,
-    chamaTrack
+    []
   );
 
   return (
@@ -192,6 +200,7 @@ const JapanMap: React.FC<JapanMapProps> = ({ className, japanData, chamaTrack })
         style={{ height: '100%', width: '100%' }}
         className="rounded-lg shadow-lg"
         zoomControl={false}
+        worldCopyJump
       // scrollWheelZoom={false}
       // zoomSnap={1}
       // /** @ts-expect-error smoothWheelZoom is not a valid prop */
@@ -238,7 +247,7 @@ const JapanMap: React.FC<JapanMapProps> = ({ className, japanData, chamaTrack })
             setSelectedPrefecture(null);
             setPositionConfig(null);
           }}
-          isPopupOpening={isPopupOpening}
+          popupOpening={popupOpening}
           mapRef={mapRef}
         />
 
